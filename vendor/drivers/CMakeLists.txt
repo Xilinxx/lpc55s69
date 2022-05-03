@@ -1,0 +1,32 @@
+set(VENDOR_DRIVER_HEADERS
+	${CMAKE_CURRENT_LIST_DIR}/fsl_clock.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_common.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_common_arm.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_crc.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_flexcomm.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_i2c.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_power.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_reset.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_usart.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_gpio.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_wwdt.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_iocon.h
+	${CMAKE_CURRENT_LIST_DIR}/fsl_spi.h
+)
+
+set(VENDOR_DRIVER_SOURCES
+	${CMAKE_CURRENT_LIST_DIR}/fsl_clock.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_common.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_common_arm.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_crc.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_flexcomm.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_iap.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_i2c.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_power.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_reset.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_usart.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_gpio.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_wwdt.c
+	${CMAKE_CURRENT_LIST_DIR}/fsl_spi.c
+	PARENT_SCOPE
+)

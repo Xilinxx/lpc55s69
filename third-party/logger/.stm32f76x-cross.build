@@ -1,0 +1,58 @@
+# import binary objects
+
+[binaries]
+c       =  'arm-none-eabi-gcc'
+cpp     =  'arm-none-eabi-g++'
+ld      =  'arm-none-eabi-ld'
+ar      =  'arm-none-eabi-ar'
+as      =  'arm-none-eabi-as'
+size    =  'arm-none-eabi-size'
+objdump =  'arm-none-eabi-objdump'
+objcopy =  'arm-none-eabi-objcopy'
+strip   =  'arm-none-eabi-strip'
+gdb     =  'gdb'
+
+openocd = '/usr/bin/openocd'
+
+[properties]
+cpu_vendor = 'stm32'
+cpu_model  = 'stm32f76x'
+
+cross_args = [
+	'-mcpu=cortex-m7',
+	'-std=gnu11',
+	'-Os',
+	'-c',
+	'-ffunction-sections',
+	'-fdata-sections',
+	'-fstack-usage',
+	'-mthumb',
+	'-mfpu=fpv5-d16',
+	'-mfloat-abi=hard',
+	'--specs=nano.specs',
+	'-Wall',
+	'-Wextra']
+
+cross_link_args = [
+	'-mcpu=cortex-m7',
+	'--specs=nosys.specs',
+	'-Wl,-Map=bootloader.map',
+	'-Wl,--gc-sections',
+	'-static',
+	'-mfpu=fpv5-d16',
+	'-mfloat-abi=hard',
+	'-mthumb',
+	'-fno-exceptions',
+	'-fno-common',
+	'-ffunction-sections',
+	'-fdata-sections',
+	'-Wl,--start-group',
+	'-Wl,--end-group',
+	'--specs=nano.specs',
+	'-flto']
+
+[host_machine]
+system     = 'none'
+cpu_family = 'arm'
+cpu        = 'cortex-m7'
+endian     = 'little'

@@ -1,0 +1,38 @@
+@startuml
+
+[*] --> ISP : Reset Vector
+
+state ISP {
+	[*] --> StartupISP
+	StartupISP --> ISPMode : Bootpin asserted
+	ISPMode --> StartupISP : New Image flashed
+	StartupISP --down--> SecondaryBootloader
+}
+
+state SecondaryBootloader {
+	[*] --> StartupSecondBoot
+	StartupSecondBoot --> ValidateImage : Validate image A or B
+	StartupSecondBoot -left-> UpdateMode : Update mode triggered
+	BootApplication --down--> ApplicationCode : Jump to Image
+
+	ValidateImage --> BootApplication : Image valid
+	ValidateImage --> SwapImage : Image invalid
+	ValidateImage --> UpdateMode : Both images corrupt
+
+	SwapImage --> ValidateImage : New Image selected
+
+	UpdateMode --> FlashNewImage : New Image received
+	FlashNewImage --> ValidateImage : Boot new image
+
+}
+
+state ApplicationCode {
+	[*] --> RunApplication
+	RunApplication --> PowerSequenceMode : Peripheral setup done
+	PowerSequenceMode --> ApplicationMode : Power Sequence done
+	ApplicationMode --up--> SecondaryBootloader : Software Update triggered
+	ApplicationMode --> PowerSequenceMode : Main CPU Reset
+	ApplicationMode -left-> RunApplication : MCU Software Reset
+}
+
+@enduml

@@ -1,0 +1,10 @@
+compile_commands.json
+build
+.clangd
+*.err
+*.log
+*.swp
+cortex-build
+CMakeFiles
+Makefile
+cmake_install.cmake

@@ -1,0 +1,9 @@
+[submodule "s300-scripts"]
+	path = s300-scripts
+	url = ssh://git@git.barco.com:7999/hdis/s300-scripts.git
+[submodule "docker"]
+	path = docker
+	url = ssh://git@git.barco.com:7999/hdis/docker-infrastructure.git
+[submodule "cmake"]
+	path = cmake
+	url = ssh://git@git.barco.com:7999/hdis/s300-cmake-common.git
