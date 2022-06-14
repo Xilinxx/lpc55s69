@@ -232,3 +232,4 @@ The i2c-read options on addres 0x50..0x53 are returning the Flash identifaction 
 ___
 ## Remarks
 * Application reset/exit happens via the watchdog function in the main-routine
+* Beautify your code with Uncrustify : `uncrustify -c ./uncrustify_objc.cfg --no-backup --replace src/application/*`

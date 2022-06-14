@@ -2,6 +2,8 @@ set(GPMCU_BOOTLOADER_SOURCES
 	${CMAKE_CURRENT_LIST_DIR}/startup.c
 	${CMAKE_CURRENT_LIST_DIR}/main.c
 	${CMAKE_CURRENT_LIST_DIR}/bootloader_helpers.c
+	${CMAKE_CURRENT_LIST_DIR}/bootloader_spi_helpers.c
+	${CMAKE_CURRENT_LIST_DIR}/bootloader_usb_helpers.c
 	${CMAKE_CURRENT_LIST_DIR}/logger_conf.c
 	PARENT_SCOPE
 )

@@ -26,3 +26,6 @@ buildinfo*
 .vscode
 .project
 nohup.out
+.trunk
+.markdownlint.yaml
+.shellcheckrc

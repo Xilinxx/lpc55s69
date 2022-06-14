@@ -21,10 +21,10 @@
  * @brief  SI5341 main context
  */
 struct si5341_ctxt_t {
-	I2C_Type *		i2c_base;       //!< I2C Base address
-	i2c_master_handle_t *	i2c_handle;     //!< I2C Master handle
-	i2c_master_transfer_t	i2c_transfer;   //!< I2C Transfer handle
-	uint8_t page;
+    I2C_Type * i2c_base;                        // !< I2C Base address
+    i2c_master_handle_t * i2c_handle;           // !< I2C Master handle
+    i2c_master_transfer_t i2c_transfer;         // !< I2C Transfer handle
+    uint8_t page;
 };
 
 /**
@@ -33,7 +33,7 @@ struct si5341_ctxt_t {
  * @param base I2C Base address
  * @param handle I2C Master handle
  */
-void si5341_init_ctxt(I2C_Type *base, i2c_master_handle_t *handle);
+void si5341_init_ctxt(I2C_Type * base, i2c_master_handle_t * handle);
 
 int si5341_dump_initial_regmap();
 

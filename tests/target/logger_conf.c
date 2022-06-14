@@ -15,10 +15,10 @@ extern struct logger_driver_t stdio_logger;
 #endif /* CFG_LOGGER_SIMPLE_LOGGER && !CFG_LOGGER_ADV_LOGGER */
 extern struct logger_driver_t uart_logger;
 
-struct logger_driver_t *adrivers[] = {
+struct logger_driver_t * adrivers[] = {
 #if defined(CFG_LOGGER_SIMPLE_LOGGER) && !defined(CFG_LOGGER_ADV_LOGGER)
-	&stdio_logger,
+    &stdio_logger,
 #endif /* CFG_LOGGER_SIMPLE_LOGGER && !CFG_LOGGER_ADV_LOGGER */
-	&uart_logger,
-	NULL,
+    &uart_logger,
+    NULL,
 };

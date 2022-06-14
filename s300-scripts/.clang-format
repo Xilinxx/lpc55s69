@@ -1,0 +1,7 @@
+{BasedOnStyle: llvm,
+SortIncludes: false,
+IndentWidth: 4,
+ColumnLimit: 0,
+BreakBeforeBraces: Linux,
+AccessModifierOffset: -4,
+BreakConstructorInitializers: AfterColon}

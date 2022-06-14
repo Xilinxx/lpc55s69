@@ -38,4 +38,4 @@ void i2c_slave_disable();
  */
 void i2c_update();
 
-#endif //__I2C_SLAVE_H__
+#endif // __I2C_SLAVE_H__

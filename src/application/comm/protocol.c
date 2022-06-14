@@ -44,20 +44,20 @@ extern volatile t_uart_data_raw UART_DATA[NUMBER_OF_PROTOCOL_UARTS]; // main.c
 
 // initialize communication data structures
 t_comm_data COMM_DATA[NUMBER_OF_PROTOCOL_UARTS] = {
-  { (u8*)&MCU_MSGBUF, (u8*)&MCU_MSGBUF, MSGBUF_SIZE, 0, 0, 0, 0,
-    COMM_WAIT_FOR_START, 0, 0, 0 , 0, 0, 0, 0, 0 },
-  { (u8*)&GOWIN_MSGBUF, (u8*)&GOWIN_MSGBUF, MSGBUF_SIZE, 0, 0, 0, 0,
-    COMM_WAIT_FOR_START, 0, 0, 0 , 0, 0, 0, 0, 0 }
+    { (u8 *)&MCU_MSGBUF,   (u8 *)&MCU_MSGBUF,   MSGBUF_SIZE, 0, 0, 0, 0,
+      COMM_WAIT_FOR_START, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { (u8 *)&GOWIN_MSGBUF, (u8 *)&GOWIN_MSGBUF, MSGBUF_SIZE, 0, 0, 0, 0,
+      COMM_WAIT_FOR_START, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const u8 COMM_START = COMM_START_BYTE;
-const u8 COMM_STOP  = COMM_STOP_BYTE;
-const u8 COMM_ESC   = COMM_ESCAPE;
+const u8 COMM_STOP = COMM_STOP_BYTE;
+const u8 COMM_ESC = COMM_ESCAPE;
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 // s8 COMM_Protocol(t_uart_channel uart_channel)
 //  This function checks the raw uart buffer for valid messages.
 //
@@ -72,140 +72,118 @@ const u8 COMM_ESC   = COMM_ESCAPE;
 //
 //  IMPORTANT:
 //  The ADR is the first byte of the *data stream
-//------------------------------------------------------------------------------
-t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel)
-{
-u8 c;
+// ------------------------------------------------------------------------------
+t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel) {
+    u8 c;
 
-  while (UART_DATA[uart_channel].RxBufWr != UART_DATA[uart_channel].RxBufRd)
-  {
-    // check if we can still receive another msg
-    if (COMM_DATA[uart_channel].MsgCount >= COMM_MAX_NO_MSG)
-    {
-      return NO_ERROR;
-    }
+    while (UART_DATA[uart_channel].RxBufWr != UART_DATA[uart_channel].RxBufRd) {
+        // check if we can still receive another msg
+        if (COMM_DATA[uart_channel].MsgCount >= COMM_MAX_NO_MSG) {
+            return NO_ERROR;
+        }
 
-    c = *UART_DATA[uart_channel].RxBufRd; // read char from circular UART buffer
-    UART_DATA[uart_channel].RxBufRd++; // increment read pointer
-    //LOG_DEBUG("COMM_Protocol process 0x%02X",c);
+        c = *UART_DATA[uart_channel].RxBufRd; // read char from circular UART buffer
+        UART_DATA[uart_channel].RxBufRd++; // increment read pointer
+        // LOG_DEBUG("COMM_Protocol process 0x%02X",c);
 
-    if (UART_DATA[uart_channel].RxBufRd >= UART_DATA[uart_channel].RxBuf
-        + UART_DATA[uart_channel].RxBufSize)
-    {
-      // reset read pointer
-      UART_DATA[uart_channel].RxBufRd = UART_DATA[uart_channel].RxBuf;
-    }
+        if (UART_DATA[uart_channel].RxBufRd >= UART_DATA[uart_channel].RxBuf
+            + UART_DATA[uart_channel].RxBufSize) {
+            // reset read pointer
+            UART_DATA[uart_channel].RxBufRd = UART_DATA[uart_channel].RxBuf;
+        }
 
-    // check if we have already received a start char, if not return
-    if ((COMM_DATA[uart_channel].State == COMM_WAIT_FOR_START)
-        && (c != COMM_START_BYTE))
-    {
-      LOG_DEBUG("COMM_DISCARD_BYTE 0x%02X", c);
-      // skip this char, and keep on skipping until start is found or buffer is empty
-    }
-    else
-    {
-      switch (c)
-      {
-        //----------------------------------------------------------------------
-        case (COMM_START_BYTE):
-          // in case of start char, unconditionally init the decoder!!
+        // check if we have already received a start char, if not return
+        if ((COMM_DATA[uart_channel].State == COMM_WAIT_FOR_START)
+            && (c != COMM_START_BYTE)) {
+            LOG_DEBUG("COMM_DISCARD_BYTE 0x%02X", c);
+            // skip this char, and keep on skipping until start is found or buffer is empty
+        } else {
+            switch (c) {
+                // ----------------------------------------------------------------------
+                case (COMM_START_BYTE):
+                    // in case of start char, unconditionally init the decoder!!
 
-          // check if we were already receiving a msg:
-          if (COMM_DATA[uart_channel].State != COMM_WAIT_FOR_START)
-          {
-            if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF)
-            {
-              COMM_DATA[uart_channel].BadMsgCount++; //increment bad msg counter
-            }
-          }
+                    // check if we were already receiving a msg:
+                    if (COMM_DATA[uart_channel].State != COMM_WAIT_FOR_START) {
+                        if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF) {
+                            COMM_DATA[uart_channel].BadMsgCount++; // increment bad msg counter
+                        }
+                    }
 
-          COMM_DATA[uart_channel].State = COMM_WAIT_FOR_STOP;
-          COMM_DATA[uart_channel].MsgLength = 0;
-           // reset write pointer
-          COMM_DATA[uart_channel].MsgBufWr = (u8*)COMM_DATA[uart_channel].MsgBuf;
-          COMM_DATA[uart_channel].offset = 0;
-          COMM_DATA[uart_channel].checksum = 0;
-          COMM_DATA[uart_channel].previous_char = 0;
-          // LOG_DEBUG("COMM_START_BYTE");
-          break;
-        //----------------------------------------------------------------------
-        case COMM_STOP_BYTE:
-          // LOG_DEBUG("COMM_STOP_BYTE");
-          // complete message has been received, incr msg counter, store message length
-          COMM_DATA[uart_channel].State = COMM_WAIT_FOR_START;
+                    COMM_DATA[uart_channel].State = COMM_WAIT_FOR_STOP;
+                    COMM_DATA[uart_channel].MsgLength = 0;
+                    // reset write pointer
+                    COMM_DATA[uart_channel].MsgBufWr = (u8 *)COMM_DATA[uart_channel].MsgBuf;
+                    COMM_DATA[uart_channel].offset = 0;
+                    COMM_DATA[uart_channel].checksum = 0;
+                    COMM_DATA[uart_channel].previous_char = 0;
+                    // LOG_DEBUG("COMM_START_BYTE");
+                    break;
+                // ----------------------------------------------------------------------
+                case COMM_STOP_BYTE:
+                    // LOG_DEBUG("COMM_STOP_BYTE");
+                    // complete message has been received, incr msg counter, store message length
+                    COMM_DATA[uart_channel].State = COMM_WAIT_FOR_START;
 
-          if (COMM_DATA[uart_channel].checksum == *(COMM_DATA[uart_channel].MsgBufWr-1))
-          {
-            // any address is a valid one... (other than own addresses will be discarded!)
-            // at least address, cmdbyte and checksum
-            if ((COMM_DATA[uart_channel].MsgBufWr-COMM_DATA[uart_channel].MsgBuf) >= 3)
-            {
-              COMM_DATA[uart_channel].MsgCount++; // set new msg flag
-              // store msg length (don't count checksum)
-              COMM_DATA[uart_channel].MsgLength = (u16)(COMM_DATA[uart_channel].MsgBufWr-COMM_DATA[uart_channel].MsgBuf-1);
-              COMM_DATA[uart_channel].GoodMsgCount++;
-              // LOG_DEBUG("COMM_RETURN_NEW_MSG");
-              return NEW_MSG;
-            }
-            else
-            {
-              LOG_DEBUG("COMM_RETURN_ERROR");
-              if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF)
-              {
-                COMM_DATA[uart_channel].BadMsgCount++;
-              }
-              return ERROR;
-            }
-          }
-          else
-          {
-            LOG_DEBUG("COMM_RETURN_ERROR CRC, expected %X is %X",COMM_DATA[uart_channel].checksum,*(COMM_DATA[uart_channel].MsgBufWr-1));
-            if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF)
-            {
-              COMM_DATA[uart_channel].BadMsgCount++; //increment bad msg counter
-            }
-            return CRC_ERROR;
-          }
-          break;
-        //----------------------------------------------------------------------
-        case COMM_ESCAPE:
-          // we don't store the escape char
-          COMM_DATA[uart_channel].offset = COMM_ESCAPE;
-          break;
-        //----------------------------------------------------------------------
-        default:
+                    if (COMM_DATA[uart_channel].checksum == *(COMM_DATA[uart_channel].MsgBufWr - 1)) {
+                        // any address is a valid one... (other than own addresses will be discarded!)
+                        // at least address, cmdbyte and checksum
+                        if ((COMM_DATA[uart_channel].MsgBufWr - COMM_DATA[uart_channel].MsgBuf) >= 3) {
+                            COMM_DATA[uart_channel].MsgCount++; // set new msg flag
+                            // store msg length (don't count checksum)
+                            COMM_DATA[uart_channel].MsgLength = (u16)(COMM_DATA[uart_channel].MsgBufWr - COMM_DATA[uart_channel].MsgBuf - 1);
+                            COMM_DATA[uart_channel].GoodMsgCount++;
+                            // LOG_DEBUG("COMM_RETURN_NEW_MSG");
+                            return NEW_MSG;
+                        } else {
+                            LOG_DEBUG("COMM_RETURN_ERROR");
+                            if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF) {
+                                COMM_DATA[uart_channel].BadMsgCount++;
+                            }
+                            return ERROR;
+                        }
+                    } else {
+                        LOG_DEBUG("COMM_RETURN_ERROR CRC, expected %X is %X", COMM_DATA[uart_channel].checksum, *(COMM_DATA[uart_channel].MsgBufWr - 1));
+                        if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF) {
+                            COMM_DATA[uart_channel].BadMsgCount++; // increment bad msg counter
+                        }
+                        return CRC_ERROR;
+                    }
+                    break;
+                // ----------------------------------------------------------------------
+                case COMM_ESCAPE:
+                    // we don't store the escape char
+                    COMM_DATA[uart_channel].offset = COMM_ESCAPE;
+                    break;
+                // ----------------------------------------------------------------------
+                default:
           #pragma GCC diagnostic push
           #pragma GCC diagnostic ignored "-Wconversion"
-          c += COMM_DATA[uart_channel].offset; // add the offset, so if previous char was an eccape char, this will correct it
-          COMM_DATA[uart_channel].offset = 0; // reset the offset because previous was ESCAPED
-          *COMM_DATA[uart_channel].MsgBufWr = c; // store the received char in buf
-          COMM_DATA[uart_channel].checksum += COMM_DATA[uart_channel].previous_char; // calculate checksum (this includes the ESC_CHAR)
-          COMM_DATA[uart_channel].previous_char = c; // we use previous char
+                    c += COMM_DATA[uart_channel].offset; // add the offset, so if previous char was an eccape char, this will correct it
+                    COMM_DATA[uart_channel].offset = 0; // reset the offset because previous was ESCAPED
+                    *COMM_DATA[uart_channel].MsgBufWr = c; // store the received char in buf
+                    COMM_DATA[uart_channel].checksum += COMM_DATA[uart_channel].previous_char; // calculate checksum (this includes the ESC_CHAR)
+                    COMM_DATA[uart_channel].previous_char = c; // we use previous char
           #pragma GCC diagnostic pop
-          if (COMM_DATA[uart_channel].MsgBufWr < (COMM_DATA[uart_channel].MsgBuf
-              + COMM_DATA[uart_channel].MsgBufSize-1))
-          {
-            COMM_DATA[uart_channel].MsgBufWr++;
-          }
-          else
-          {
-            //generate error
-            COMM_DATA[uart_channel].State = COMM_WAIT_FOR_START;
-            if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF)
-            {
-              COMM_DATA[uart_channel].BadMsgCount++; // increment bad msg counter
+                    if (COMM_DATA[uart_channel].MsgBufWr < (COMM_DATA[uart_channel].MsgBuf
+                                                            + COMM_DATA[uart_channel].MsgBufSize - 1)) {
+                        COMM_DATA[uart_channel].MsgBufWr++;
+                    } else {
+                        // generate error
+                        COMM_DATA[uart_channel].State = COMM_WAIT_FOR_START;
+                        if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF) {
+                            COMM_DATA[uart_channel].BadMsgCount++; // increment bad msg counter
+                        }
+                    }
+                    break;
             }
-          }
-          break;
-      }
+        }
     }
-  }
 
-  return NO_ERROR;
+    return NO_ERROR;
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 // void PROTO_TX_SendMsg(t_uart_channel uart_channel, u8 *data, u16 length)
 //  encodes AND sends a serial stream according to the protocol
 //  Adds following chars to the msg:
@@ -219,55 +197,49 @@ u8 c;
 //
 //  IMPORTANT:
 //  We assume that RA is the first byte of the *data stream
-//------------------------------------------------------------------------------
-void PROTO_TX_SendMsg (t_uart_channel uart_channel, u8 *data, u16 length)
-{
+// ------------------------------------------------------------------------------
+void PROTO_TX_SendMsg(t_uart_channel uart_channel, u8 * data, u16 length) {
 #ifndef UNIT_TEST  // mock is being used for UNIT_TEST
-u8 c, checksum;
-u16 j;
+    u8 c, checksum;
+    u16 j;
 
-USART_Type *base;
+    USART_Type * base;
 
-  // select UART base address
-  switch (uart_channel)
-  {
-    case UART1:
-      base = USART0;
-      break;
+    // select UART base address
+    switch (uart_channel) {
+        case UART1:
+            base = USART0;
+            break;
 
-    case UART2:
-      base = USART1;
-      break;
+        case UART2:
+            base = USART1;
+            break;
 
-    default:      return;
-  }
-
-  checksum = 0;
-  USART_WriteBlocking(base, (u8*)&COMM_START, 1);
-  for (j = 0; j <= length; j++)
-  {
-    if (j < length)
-    {
-      c = data[j];
-      checksum = (u8)(checksum + c);
+        default:      return;
     }
-    else
-      c = checksum;
 
-    if ((c == COMM_ESCAPE) || (c == COMM_START_BYTE) || (c == COMM_STOP_BYTE))
-    {
-      USART_WriteBlocking(base, (u8*)&COMM_ESC, 1);
-      c = (u8)(c - COMM_ESCAPE); //calculate new char
+    checksum = 0;
+    USART_WriteBlocking(base, (u8 *)&COMM_START, 1);
+    for (j = 0; j <= length; j++) {
+        if (j < length) {
+            c = data[j];
+            checksum = (u8)(checksum + c);
+        } else
+            c = checksum;
+
+        if ((c == COMM_ESCAPE) || (c == COMM_START_BYTE) || (c == COMM_STOP_BYTE)) {
+            USART_WriteBlocking(base, (u8 *)&COMM_ESC, 1);
+            c = (u8)(c - COMM_ESCAPE); // calculate new char
+        }
+        USART_WriteBlocking(base, (u8 *)&c, 1);
     }
-    USART_WriteBlocking(base, (u8*)&c, 1);
-  }
-  USART_WriteBlocking(base, (u8*)&COMM_STOP, 1);
+    USART_WriteBlocking(base, (u8 *)&COMM_STOP, 1);
 
-  while (!(kUSART_TxFifoEmptyFlag & USART_GetStatusFlags(base)))
-  {} // wait till transmission complete
+    while (!(kUSART_TxFifoEmptyFlag & USART_GetStatusFlags(base))) {
+    } // wait till transmission complete
 
 #else
-  LOG_ERROR("PROTO_TX_SendMsg should be mocked");
+    LOG_ERROR("PROTO_TX_SendMsg should be mocked");
 #endif
 
 

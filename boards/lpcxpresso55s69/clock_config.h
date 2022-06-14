@@ -15,8 +15,8 @@
 
 #include "fsl_common.h"
 
-#define BOARD_XTAL32K_CLK_HZ            32768U          /**< Board xtal32K frequency in Hz */
-#define BOARD_BOOTCLOCKRUN_CORE_CLOCK   150000000U      /**< Core clock frequency: 150000000Hz */
+#define BOARD_XTAL32K_CLK_HZ               32768U       /**< Board xtal32K frequency in Hz */
+#define BOARD_BOOTCLOCKRUN_CORE_CLOCK      150000000U   /**< Core clock frequency: 150000000Hz */
 #define BOARD_BOOTCLOCKFROHF96M_CORE_CLOCK 96000000U    /**< FROHF96M clock frequency */
 
 /**

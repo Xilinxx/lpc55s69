@@ -12,7 +12,7 @@
 
 extern struct logger_driver_t stdio_logger;
 
-struct logger_driver_t *adrivers[] = {
-	&stdio_logger,
-	NULL,
+struct logger_driver_t * adrivers[] = {
+    &stdio_logger,
+    NULL,
 };

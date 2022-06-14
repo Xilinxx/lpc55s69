@@ -94,7 +94,7 @@ void Reserved42_IRQHandler(void) __attribute__((weak, alias("DefaultHandler")));
 
 __attribute__((weak)) void USB0_NEEDCLK_IRQHandler(void);
 void USB0_NEEDCLK_IRQHandler(void) __attribute__((weak,
-						  alias("DefaultHandler")));
+                                                  alias("DefaultHandler")));
 
 __attribute__((weak)) void USB0_IRQHandler(void);
 void USB0_IRQHandler(void) __attribute__((weak, alias("DefaultHandler")));
@@ -158,22 +158,22 @@ void USB1_IRQHandler(void) __attribute__((weak, alias("DefaultHandler")));
 
 __attribute__((weak)) void USB1_NEEDCLK_IRQHandler(void);
 void USB1_NEEDCLK_IRQHandler(void) __attribute__((weak,
-						  alias("DefaultHandler")));
+                                                  alias("DefaultHandler")));
 
 __attribute__((weak)) void SEC_HYPERVISOR_CALL_IRQHandler(void);
 void SEC_HYPERVISOR_CALL_IRQHandler(void) __attribute__((weak,
-							 alias(
-								 "DefaultHandler")));
+                                                         alias(
+                                                             "DefaultHandler")));
 
 __attribute__((weak)) void SEC_GPIO_INT0_IRQ0_IRQHandler(void);
 void SEC_GPIO_INT0_IRQ0_IRQHandler(void) __attribute__((weak,
-							alias(
-								"DefaultHandler")));
+                                                        alias(
+                                                            "DefaultHandler")));
 
 __attribute__((weak)) void SEC_GPIO_INT0_IRQ1_IRQHandler(void);
 void SEC_GPIO_INT0_IRQ1_IRQHandler(void) __attribute__((weak,
-							alias(
-								"DefaultHandler")));
+                                                        alias(
+                                                            "DefaultHandler")));
 
 __attribute__((weak)) void PLU_IRQHandler(void);
 void PLU_IRQHandler(void) __attribute__((weak, alias("DefaultHandler")));

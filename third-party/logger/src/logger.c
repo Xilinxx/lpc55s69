@@ -83,7 +83,7 @@ int logger_get_loglvl()
 
 void logger_set_loglvl(int loglvl)
 {
-	LOG_INFO("Changing log level");
+	// LOG_INFO("Changing log level");
 	_current_loglvl = loglvl;
 }
 

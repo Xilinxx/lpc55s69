@@ -10,145 +10,145 @@
 #ifndef _PIN_MUX_H_
 #define _PIN_MUX_H_
 
-#define IOCON_PIO_DIGITAL_EN 0x0100u  /*!<@brief Enables digital function */
-#define IOCON_PIO_FUNC0 0x00u         /*!<@brief Selects pin function 0 */
-#define IOCON_PIO_FUNC1 0x01u         /*!<@brief Selects pin function 1 */
-#define IOCON_PIO_FUNC3 0x03u         /*!<@brief Selects pin function 3 */
-#define IOCON_PIO_FUNC4 0x04u         /*!<@brief Selects pin function 4 */
-#define IOCON_PIO_FUNC5 0x05u         /*!<@brief Selects pin function 5 */
-#define IOCON_PIO_FUNC6 0x06u         /*!<@brief Selects pin function 6 */
-#define IOCON_PIO_FUNC9 0x09u         /*!<@brief Selects pin function 9 */
-#define IOCON_PIO_INV_DI 0x00u        /*!<@brief Input function is not inverted */
-#define IOCON_PIO_MODE_INACT 0x00u    /*!<@brief No addition pin function */
-#define IOCON_PIO_MODE_PULLUP 0x20u   /*!<@brief Selects pull-up function */
-#define IOCON_PIO_OPENDRAIN_DI 0x00u  /*!<@brief Open drain is disabled */
-#define IOCON_PIO_SLEW_STANDARD 0x00u /*!<@brief Standard mode, output slew rate control is enabled */
+#define IOCON_PIO_DIGITAL_EN         0x0100u /*!<@brief Enables digital function */
+#define IOCON_PIO_FUNC0              0x00u /*!<@brief Selects pin function 0 */
+#define IOCON_PIO_FUNC1              0x01u /*!<@brief Selects pin function 1 */
+#define IOCON_PIO_FUNC3              0x03u /*!<@brief Selects pin function 3 */
+#define IOCON_PIO_FUNC4              0x04u /*!<@brief Selects pin function 4 */
+#define IOCON_PIO_FUNC5              0x05u /*!<@brief Selects pin function 5 */
+#define IOCON_PIO_FUNC6              0x06u /*!<@brief Selects pin function 6 */
+#define IOCON_PIO_FUNC9              0x09u /*!<@brief Selects pin function 9 */
+#define IOCON_PIO_INV_DI             0x00u /*!<@brief Input function is not inverted */
+#define IOCON_PIO_MODE_INACT         0x00u /*!<@brief No addition pin function */
+#define IOCON_PIO_MODE_PULLUP        0x20u /*!<@brief Selects pull-up function */
+#define IOCON_PIO_OPENDRAIN_DI       0x00u /*!<@brief Open drain is disabled */
+#define IOCON_PIO_SLEW_STANDARD      0x00u /*!<@brief Standard mode, output slew rate control is enabled */
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_2_DIGIMODE_DIGITAL 0x01u
+#define PIO0_2_DIGIMODE_DIGITAL      0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 1. */
-#define PIO0_2_FUNC_ALT1 0x01u
+#define PIO0_2_FUNC_ALT1             0x01u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_3_DIGIMODE_DIGITAL 0x01u
+#define PIO0_3_DIGIMODE_DIGITAL      0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 1. */
-#define PIO0_3_FUNC_ALT1 0x01u
+#define PIO0_3_FUNC_ALT1             0x01u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_13_DIGIMODE_DIGITAL 0x01u
+#define PIO0_13_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 5. */
-#define PIO0_13_FUNC_ALT5 0x05u
+#define PIO0_13_FUNC_ALT5            0x05u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_14_DIGIMODE_DIGITAL 0x01u
+#define PIO0_14_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 6. */
-#define PIO0_14_FUNC_ALT6 0x06u
+#define PIO0_14_FUNC_ALT6            0x06u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_29_DIGIMODE_DIGITAL 0x01u
+#define PIO0_29_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 1. */
-#define PIO0_29_FUNC_ALT1 0x01u
+#define PIO0_29_FUNC_ALT1            0x01u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_30_DIGIMODE_DIGITAL 0x01u
+#define PIO0_30_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 1. */
-#define PIO0_30_FUNC_ALT1 0x01u
+#define PIO0_30_FUNC_ALT1            0x01u
 
 /*! @name PIO0_29 (number 92), P8[2]/U6[13]/FC0_USART_RXD
-  @{ */
-#define BOARD_DEBUG_UART_RX_PORT 0U              /*!<@brief PORT peripheral base pointer */
-#define BOARD_DEBUG_UART_RX_PIN 29U              /*!<@brief PORT pin number */
+ * @{ */
+#define BOARD_DEBUG_UART_RX_PORT     0U          /*!<@brief PORT peripheral base pointer */
+#define BOARD_DEBUG_UART_RX_PIN      29U         /*!<@brief PORT pin number */
 #define BOARD_DEBUG_UART_RX_PIN_MASK (1U << 29U) /*!<@brief PORT pin mask */
                                                  /* @} */
 
 /*! @name PIO0_30 (number 94), P8[3]/U6[12]/FC0_USART_TXD
-  @{ */
-#define BOARD_DEBUG_UART_TX_PORT 0U              /*!<@brief PORT peripheral base pointer */
-#define BOARD_DEBUG_UART_TX_PIN 30U              /*!<@brief PORT pin number */
+ * @{ */
+#define BOARD_DEBUG_UART_TX_PORT     0U          /*!<@brief PORT peripheral base pointer */
+#define BOARD_DEBUG_UART_TX_PIN      30U         /*!<@brief PORT pin number */
 #define BOARD_DEBUG_UART_TX_PIN_MASK (1U << 30U) /*!<@brief PORT pin mask */
 
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_13_DIGIMODE_DIGITAL 0x01u
+#define PIO0_13_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 5. */
-#define PIO0_13_FUNC_ALT5 0x05u
+#define PIO0_13_FUNC_ALT5            0x05u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_14_DIGIMODE_DIGITAL 0x01u
+#define PIO0_14_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 6. */
-#define PIO0_14_FUNC_ALT6 0x06u
+#define PIO0_14_FUNC_ALT6            0x06u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_9_DIGIMODE_DIGITAL 0x01u
+#define PIO0_9_DIGIMODE_DIGITAL      0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 3. */
-#define PIO0_9_FUNC_ALT3 0x03u
+#define PIO0_9_FUNC_ALT3             0x03u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO1_14_DIGIMODE_DIGITAL 0x01u
+#define PIO1_14_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 4. */
-#define PIO1_14_FUNC_ALT4 0x04u
+#define PIO1_14_FUNC_ALT4            0x04u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO1_9_DIGIMODE_DIGITAL 0x01u
+#define PIO1_9_DIGIMODE_DIGITAL      0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 5. */
-#define PIO1_9_FUNC_ALT5 0x05u
+#define PIO1_9_FUNC_ALT5             0x05u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_16_DIGIMODE_DIGITAL 0x01u
+#define PIO0_16_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 1. */
-#define PIO0_16_FUNC_ALT1 0x01u
+#define PIO0_16_FUNC_ALT1            0x01u
 
 /************************* FlexComm8 as SPI ***********************************/
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_20_DIGIMODE_DIGITAL 0x01u
+#define PIO0_20_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO0_26_DIGIMODE_DIGITAL 0x01u
+#define PIO0_26_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO1_2_DIGIMODE_DIGITAL 0x01u
+#define PIO1_2_DIGIMODE_DIGITAL      0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 6. */
-#define PIO1_2_FUNC_ALT6 0x06u
+#define PIO1_2_FUNC_ALT6             0x06u
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO1_3_DIGIMODE_DIGITAL 0x01u
+#define PIO1_3_DIGIMODE_DIGITAL      0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 6. */
-#define PIO1_3_FUNC_ALT6 0x06u
+#define PIO1_3_FUNC_ALT6             0x06u
 
 /* MUX Select for SPI on Flexcomm8 */
 /*!
  * @brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
-#define PIO1_31_DIGIMODE_DIGITAL 0x01u
+#define PIO1_31_DIGIMODE_DIGITAL     0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 0. */
-#define PIO1_31_FUNC_ALT0 0x00u
+#define PIO1_31_FUNC_ALT0            0x00u
 
 /* for future use: MClk for Gowin , pio1_31 mux -> pio1_29 */
 /*!
  * @brief MCLK control.: output mode. */
-#define MCLKIO_MCLKIO_OUTPUT 0x01u
+#define MCLKIO_MCLKIO_OUTPUT         0x01u
 /*!
  * @brief Selects pin function.: Alternative connection 1. */
-#define PIO1_31_FUNC_ALT1 0x01u
+#define PIO1_31_FUNC_ALT1            0x01u
 /*! @name PIO1_31 (number 91), MCLK
-  @{ */
-#define BOARD_INITPINS_MCLK_PORT 1U              /*!<@brief PORT peripheral base pointer */
-#define BOARD_INITPINS_MCLK_PIN 31U              /*!<@brief PORT pin number */
+ * @{ */
+#define BOARD_INITPINS_MCLK_PORT     1U          /*!<@brief PORT peripheral base pointer */
+#define BOARD_INITPINS_MCLK_PIN      31U         /*!<@brief PORT pin number */
 #define BOARD_INITPINS_MCLK_PIN_MASK (1U << 31U) /*!<@brief PORT pin mask */
                                                  /* @} */
 

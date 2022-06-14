@@ -1,0 +1,2 @@
+*.swp
+redis-server/data/*

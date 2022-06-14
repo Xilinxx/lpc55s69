@@ -24,6 +24,7 @@ endmacro()
 add_recursive(${CMAKE_CURRENT_LIST_DIR} SOURCES)
 list(APPEND SOURCES
   ${CMAKE_CURRENT_LIST_DIR}/../bootloader/bootloader_helpers.c
+  ${CMAKE_CURRENT_LIST_DIR}/../bootloader/bootloader_usb_helpers.c
   )
 list_print(SOURCES)
 set(GPMCU_APP_SOURCES ${SOURCES} PARENT_SCOPE)

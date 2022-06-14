@@ -1,10 +1,10 @@
-file build_zeus/bootloader.elf
+file build_zeus/bin/bootloader.elf
 # file ./app.elf
 # file ./tests/target/i2c-hub-poc.elf
 tar ext:2331
 monitor halt
 monitor reset 0
-load build_zeus/bootloader.elf
+load build_zeus/bin/bootloader.elf
 # load ./app.elf
 # load ./tests/target/i2c-hub-poc.elf
 

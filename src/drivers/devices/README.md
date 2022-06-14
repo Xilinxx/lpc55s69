@@ -4,6 +4,7 @@
 * [Drivers](#drivers)
   + [USB5807C](#usb5807c)
   + [TMDS181](#tmds181)
+  + [TMDS181](#is25xp)
 
 # Intro
 The green power MCU communicates with multiple dedicated devices. All drivers for these devices can be found in `drivers/devices/`. These drivers implement the devices specific layers only. Protocol implementations can be found in `drivers/interfaces`.
@@ -37,3 +38,7 @@ TMDS181 is an HDMI retimer. The main reason for the GPMCU to communicate with th
 | 0x00 | System has active video |
 | 0x01 | System is connected and powered but no video is present |
 | 0x02 | System has no active video |
+
+## is25xp
+Driver for SPI-based IS25LPxx parts 32MBit and larger.  
+Meant for spi flash access where the Gowin FPGA gets his bitfile for startup.

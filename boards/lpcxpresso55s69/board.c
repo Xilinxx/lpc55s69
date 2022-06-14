@@ -8,8 +8,7 @@
 
 #include "board.h"
 
-uint8_t BOARD_GetRevision(void)
-{
-	/* PLACEHOLDER */
-	return 1;
+uint8_t BOARD_GetRevision(void) {
+    /* PLACEHOLDER */
+    return 1;
 }

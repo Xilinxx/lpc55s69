@@ -2,13 +2,13 @@
 #define _FLASH_HELPER_H_
 
 /*********************** (C) COPYRIGHT BARCO **********************************
-* File Name           : flash_helper.h
-* Author              : Barco , David Thio <david.thio@barco.com>
-* created             : June 2021
-* Description         : Helper functions for accessing/modif bootloadeer
-* History:
-* 05/07/2021 : introduced in gpmcu code (DAVTH)
-*******************************************************************************/
+ * File Name           : flash_helper.h
+ * Author              : Barco , David Thio <david.thio@barco.com>
+ * created             : June 2021
+ * Description         : Helper functions for accessing/modif bootloadeer
+ * History:
+ * 05/07/2021 : introduced in gpmcu code (DAVTH)
+ *******************************************************************************/
 #include <stdbool.h>
 #include "bootloader.h"
 

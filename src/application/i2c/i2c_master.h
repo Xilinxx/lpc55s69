@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-typedef uint8_t   u8;
-typedef uint16_t  u16;
-typedef uint32_t  u32;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
 
 /*******************************************************************************
  * Definitions
@@ -20,4 +20,4 @@ typedef uint32_t  u32;
 int i2c_master_setup();
 int i2c_master_initialize_usb(void);
 
-#endif  //__I2C_MASTER_H__
+#endif  // __I2C_MASTER_H__
