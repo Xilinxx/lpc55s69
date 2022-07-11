@@ -44,9 +44,9 @@ extern volatile t_uart_data_raw UART_DATA[NUMBER_OF_PROTOCOL_UARTS]; // main.c
 
 // initialize communication data structures
 t_comm_data COMM_DATA[NUMBER_OF_PROTOCOL_UARTS] = {
-    { (u8 *)&MCU_MSGBUF,   (u8 *)&MCU_MSGBUF,   MSGBUF_SIZE, 0, 0, 0, 0,
+    { (u8 *)&MCU_MSGBUF,   (u8 *)&MCU_MSGBUF,   MSGBUF_SIZE,   0,   0,   0,   0,
       COMM_WAIT_FOR_START, 0, 0, 0, 0, 0, 0, 0, 0 },
-    { (u8 *)&GOWIN_MSGBUF, (u8 *)&GOWIN_MSGBUF, MSGBUF_SIZE, 0, 0, 0, 0,
+    { (u8 *)&GOWIN_MSGBUF, (u8 *)&GOWIN_MSGBUF, MSGBUF_SIZE,   0,   0,   0,   0,
       COMM_WAIT_FOR_START, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
@@ -125,13 +125,18 @@ t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel) {
                     // complete message has been received, incr msg counter, store message length
                     COMM_DATA[uart_channel].State = COMM_WAIT_FOR_START;
 
-                    if (COMM_DATA[uart_channel].checksum == *(COMM_DATA[uart_channel].MsgBufWr - 1)) {
+                    if (COMM_DATA[uart_channel].checksum == *(COMM_DATA[uart_channel].MsgBufWr -
+                                                              1)) {
                         // any address is a valid one... (other than own addresses will be discarded!)
                         // at least address, cmdbyte and checksum
-                        if ((COMM_DATA[uart_channel].MsgBufWr - COMM_DATA[uart_channel].MsgBuf) >= 3) {
+                        if ((COMM_DATA[uart_channel].MsgBufWr - COMM_DATA[uart_channel].MsgBuf) >=
+                            3) {
                             COMM_DATA[uart_channel].MsgCount++; // set new msg flag
                             // store msg length (don't count checksum)
-                            COMM_DATA[uart_channel].MsgLength = (u16)(COMM_DATA[uart_channel].MsgBufWr - COMM_DATA[uart_channel].MsgBuf - 1);
+                            COMM_DATA[uart_channel].MsgLength =
+                                (u16)(COMM_DATA[uart_channel].MsgBufWr -
+                                      COMM_DATA[uart_channel].MsgBuf -
+                                      1);
                             COMM_DATA[uart_channel].GoodMsgCount++;
                             // LOG_DEBUG("COMM_RETURN_NEW_MSG");
                             return NEW_MSG;
@@ -143,7 +148,9 @@ t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel) {
                             return ERROR;
                         }
                     } else {
-                        LOG_DEBUG("COMM_RETURN_ERROR CRC, expected %X is %X", COMM_DATA[uart_channel].checksum, *(COMM_DATA[uart_channel].MsgBufWr - 1));
+                        LOG_DEBUG("COMM_RETURN_ERROR CRC, expected %X is %X",
+                                  COMM_DATA[uart_channel].checksum,
+                                  *(COMM_DATA[uart_channel].MsgBufWr - 1));
                         if (COMM_DATA[uart_channel].BadMsgCount < 0xFFFF) {
                             COMM_DATA[uart_channel].BadMsgCount++; // increment bad msg counter
                         }
@@ -166,7 +173,8 @@ t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel) {
                     COMM_DATA[uart_channel].previous_char = c; // we use previous char
           #pragma GCC diagnostic pop
                     if (COMM_DATA[uart_channel].MsgBufWr < (COMM_DATA[uart_channel].MsgBuf
-                                                            + COMM_DATA[uart_channel].MsgBufSize - 1)) {
+                                                            + COMM_DATA[uart_channel].MsgBufSize -
+                                                            1)) {
                         COMM_DATA[uart_channel].MsgBufWr++;
                     } else {
                         // generate error
@@ -198,7 +206,9 @@ t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel) {
 //  IMPORTANT:
 //  We assume that RA is the first byte of the *data stream
 // ------------------------------------------------------------------------------
-void PROTO_TX_SendMsg(t_uart_channel uart_channel, u8 * data, u16 length) {
+void PROTO_TX_SendMsg(t_uart_channel uart_channel,
+                      u8 * data,
+                      u16 length) {
 #ifndef UNIT_TEST  // mock is being used for UNIT_TEST
     u8 c, checksum;
     u16 j;

@@ -43,7 +43,9 @@ static void _print_header(struct uart_logger_ctxt_t * ctxt,
                         strlen(uart_logger_buffer));
 }
 
-static int _write_uart(void * drv, struct line_info_t * linfo, char * fmt,
+static int _write_uart(void * drv,
+                       struct line_info_t * linfo,
+                       char * fmt,
                        va_list * v) {
     struct logger_driver_t * driver = (struct logger_driver_t *)drv;
 

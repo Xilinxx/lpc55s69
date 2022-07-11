@@ -27,7 +27,8 @@ void _clear_transfer_ctxt(struct comm_ctxt_t * ctxt) {
     ctxt->part_nr = 0;
 }
 
-int _comm_send_rrq(struct comm_driver_t * cdriver, struct comm_ctxt_t * ctxt) {
+int _comm_send_rrq(struct comm_driver_t * cdriver,
+                   struct comm_ctxt_t * ctxt) {
     struct comm_proto_rrq_wrq_t rrq = { 0 };
 
     rrq.opcode = COMMP_RRQ;
@@ -156,7 +157,8 @@ int _comm_send_ack(struct comm_driver_t * cdriver,
     return 0;
 }
 
-int _comm_send_err(struct comm_driver_t * cdriver, uint16_t errorcode,
+int _comm_send_err(struct comm_driver_t * cdriver,
+                   uint16_t errorcode,
                    char * errorstr) {
     uint8_t out_buffer[COMMP_ERROR_BUFFER_SIZE] = { 0 };
 

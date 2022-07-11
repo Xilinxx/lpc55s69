@@ -27,7 +27,8 @@ static struct is25xp_dev_s priv;
  * Name: is25xp_readid
  ******************************************************************************/
 
-int is25xp_readid(uint8_t * productIdentification, uint8_t verbose) {
+int is25xp_readid(uint8_t * productIdentification,
+                  uint8_t verbose) {
     uint16_t manufacturer;
     uint16_t memory;
     uint16_t capacity;
@@ -194,7 +195,8 @@ void is25xp_unprotect() {
  * Name:  is25xp_sectorerase
  ******************************************************************************/
 
-void is25xp_sectorerase(off_t sector, uint8_t type) {
+void is25xp_sectorerase(off_t sector,
+                        uint8_t type) {
     off_t offset;
 
     offset = sector << priv.sectorshift; // 12 shifts for 4k areas
@@ -272,7 +274,8 @@ int is25xp_bulkerase() {
  * programmed into memory in a single operation
  ******************************************************************************/
 
-void is25xp_pagewrite(uint8_t * buffer, off_t page) {
+void is25xp_pagewrite(uint8_t * buffer,
+                      off_t page) {
     off_t offset = page << priv.pageshift;
 
     if (priv.pageshift != IS25_IS25LP064_PAGE_SHIFT) {
@@ -319,7 +322,9 @@ void is25xp_pagewrite(uint8_t * buffer, off_t page) {
  ******************************************************************************/
 
 #ifdef CONFIG_MTD_BYTE_WRITE
-static inline void is25xp_bytewrite(const uint8_t * buffer, off_t offset, uint16_t count) {
+static inline void is25xp_bytewrite(const uint8_t * buffer,
+                                    off_t offset,
+                                    uint16_t count) {
     LOG_DEBUG("offset: %08lx  count:%d\n", (long)offset, count);
 
     /* Wait for any preceding write to complete.  We could simplify things by
@@ -359,7 +364,8 @@ static inline void is25xp_bytewrite(const uint8_t * buffer, off_t offset, uint16
  * Name: is25xp_erase
  ******************************************************************************/
 
-int is25xp_erase(off_t startblock, size_t nblocks) {
+int is25xp_erase(off_t startblock,
+                 size_t nblocks) {
     size_t blocksleft = nblocks;
 
     LOG_DEBUG("startblock: %08lx nblocks: %d\n", (long)startblock, (int)nblocks);
@@ -426,14 +432,18 @@ int is25xp_erase(off_t startblock, size_t nblocks) {
  * Name: is25xp_bread
  ******************************************************************************/
 
-ssize_t is25xp_bread(off_t startblock, size_t nblocks, uint8_t * buffer, uint8_t verbose) {
+ssize_t is25xp_bread(off_t startblock,
+                     size_t nblocks,
+                     uint8_t * buffer,
+                     uint8_t verbose) {
     ssize_t nbytes;
 
     // if this happens we got a data overrun on destBuff[]
     if (priv.pageshift != IS25_IS25LP064_PAGE_SHIFT)
         LOG_ERROR("Initialisation error , IS25LP128 requires %d", IS25_IS25LP064_PAGE_SHIFT);
     if (verbose)
-        LOG_DEBUG("startblock: %08lx nblocks: %d (pageshift=%d)", (long)startblock, (int)nblocks, priv.pageshift);
+        LOG_DEBUG("startblock: %08lx nblocks: %d (pageshift=%d)", (long)startblock, (int)nblocks,
+                  priv.pageshift);
 
     /* On this device, we can handle the block read just like the byte-oriented read */
     nbytes = is25xp_read(startblock << priv.pageshift, nblocks << priv.pageshift, buffer, verbose);
@@ -448,7 +458,10 @@ ssize_t is25xp_bread(off_t startblock, size_t nblocks, uint8_t * buffer, uint8_t
  * Name: is25xp_bwrite
  ******************************************************************************/
 
-ssize_t is25xp_bwrite(off_t startblock, size_t nblocks, uint8_t * buffer, uint8_t verbose) {
+ssize_t is25xp_bwrite(off_t startblock,
+                      size_t nblocks,
+                      uint8_t * buffer,
+                      uint8_t verbose) {
     size_t blocksleft = nblocks;
     size_t pagesize = (size_t)(1 << priv.pageshift);
 
@@ -475,7 +488,10 @@ ssize_t is25xp_bwrite(off_t startblock, size_t nblocks, uint8_t * buffer, uint8_
  * Name: is25xp_read
  ******************************************************************************/
 
-ssize_t is25xp_read(off_t offset, size_t nbytes, uint8_t * buffer, uint8_t verbose) {
+ssize_t is25xp_read(off_t offset,
+                    size_t nbytes,
+                    uint8_t * buffer,
+                    uint8_t verbose) {
     if (verbose)
         LOG_DEBUG("offset: %08lx nbytes: %d", (long)offset, (int)nbytes);
 
@@ -515,7 +531,9 @@ ssize_t is25xp_read(off_t offset, size_t nbytes, uint8_t * buffer, uint8_t verbo
  ******************************************************************************/
 
 #ifdef CONFIG_MTD_BYTE_WRITE
-ssize_t is25xp_write(off_t offset, size_t nbytes, const uint8_t * buffer) {
+ssize_t is25xp_write(off_t offset,
+                     size_t nbytes,
+                     const uint8_t * buffer) {
     struct is25xp_dev_s * _priv = &priv;
     int startpage;
     int endpage;

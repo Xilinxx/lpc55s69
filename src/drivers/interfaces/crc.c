@@ -21,7 +21,9 @@
  * @note: Code from: https://rosettacode.org/wiki/CRC-32#C
  */
 
-uint32_t crc32(uint32_t crc, const uint8_t * buf, size_t len) {
+uint32_t crc32(uint32_t crc,
+               const uint8_t * buf,
+               size_t len) {
     static uint32_t table[256];
     static int have_table = 0;
     uint32_t rem;

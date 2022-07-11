@@ -47,7 +47,10 @@ struct conn_t {
  * @param port The connection port
  * @returns an initialised connection
  */
-struct conn_t * socket_init_connection(role_t role, int protocol, char * ip, int
+struct conn_t * socket_init_connection(role_t role,
+                                       int protocol,
+                                       char * ip,
+                                       int
                                        port);
 
 /**
@@ -56,7 +59,8 @@ struct conn_t * socket_init_connection(role_t role, int protocol, char * ip, int
  * @param options Added options for the socket
  * @return Returns an error_t value
  */
-int socket_create_socket(struct conn_t * con, int options);
+int socket_create_socket(struct conn_t * con,
+                         int options);
 
 /**
  * Setup broadcast for a socket

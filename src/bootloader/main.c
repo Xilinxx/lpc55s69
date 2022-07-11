@@ -2,7 +2,9 @@
  * @file bootloader.c
  * @brief  Main source for bootloader
  * @author Bram Vlerick <bram.vlerick@openpixelsystems.org>
- * @version v0.1
+ *         David Thio <david.thio@barco.com>
+ * @version v0.0.1 - bram v - initial
+ *          v0.1.0 - davth - memory remap + spi flash
  * @date 2020-08-13
  */
 
@@ -24,7 +26,8 @@
 #include "bootloader_usb_helpers.h"
 
 #include "logger.h"
-#include "version.h"
+#include "version.h" // git version
+#include "../application/softversions.h" // hardcoded version
 
 #include "memory_map.h"
 #include "fsl_gpio.h"
@@ -248,7 +251,7 @@ int main(void) {
 
     _initialize_board();
 
-    LOG_INFO("Bootloader (%s)", BOOTLOADER_VERSION_GIT);
+    LOG_INFO("Bootloader %s(%s)", BOOTLOADER_VERSION, BOOTLOADER_VERSION_GIT);
 
     struct flash_area_t approm0 = storage_new_flash_area(FLASH_HELPER(approm0));
     struct flash_area_t approm1 = storage_new_flash_area(FLASH_HELPER(approm1));
@@ -354,10 +357,11 @@ int main(void) {
 
     // !< Initialize Watchdog
     LOG_INFO("Bootloader Watchdog initialised");
-    // BOARD_WWDT_init(&wwdt_config);
+    BOARD_WWDT_init(&wwdt_config);
 
 #ifdef BOARD_ZEUS
     uint8_t timeout = 5;
+
     while (_initialize_usb_zeus() < 0) {
         SDK_DelayAtLeastUs(1000000, 96000000U);
         LOG_INFO("retrying usb initialisation.. %d", timeout);
@@ -365,16 +369,15 @@ int main(void) {
             break;
         // will auto reboot via wdog
     }
-    ;
 #endif
 
 #ifdef BOARD_GAIA
     logger_set_loglvl(LOG_LVL_EXTRA);
     // usb1 comes first because the i2c-adr gets adjusted
-    _initialize_usb1_gaia();
+    _initialize_usb1_gaia(true);
     LOG_RAW("");
     // usb0 keeps it's original i2c-address 0xD2
-    _initialize_usb0_gaia();
+    _initialize_usb0_gaia(false);
     LOG_RAW("");
 #endif
 
@@ -418,7 +421,8 @@ int main(void) {
             WWDT_Refresh(WWDT);
 
             /* for comm_protocol_run() there is a wdog refresh in commp_uart.c */
-            int retval = comm_protocol_run(&_bctxt, cdriver, sdriver, spi_flash_driver, &_spi0_ctxt);
+            int retval = comm_protocol_run(&_bctxt, cdriver, sdriver, spi_flash_driver,
+                                           &_spi0_ctxt);
 
             LOG_INFO("comm_protocol_run returned (%d)", retval);
             switch (retval) {
@@ -441,6 +445,11 @@ int main(void) {
                 case COMMP_CMD_SWAP:
                     swap_part = true;
                     break;
+                case COMMP_CMD_VERINFO:
+                    LOG_INFO("Sending version info to host");
+                    _bootloader_send_versioninfo(BOOTLOADER_VERSION,
+                                                 BOOTLOADER_VERSION_GIT, cdriver);
+                    break;
                 case COMMP_CMD_BOOTINFO:
                     LOG_INFO("Sending bootinfo to host");
                     _bootloader_send_bootinfo(&_bctxt_in_Flash, cdriver);
@@ -458,7 +467,8 @@ int main(void) {
                     SDK_DelayAtLeastUs(1000000, 96000000U);
                     BOARD_Reconfigure_Gowin(200000);
                     SDK_DelayAtLeastUs(1000000, 96000000U);
-                    LOG_INFO("Gowin Ready State is [%s]", (BOARD_Ready_Gowin() == 1 ? "OK" : "NOK"));
+                    LOG_INFO("Gowin Ready State is [%s]", (BOARD_Ready_Gowin() == 1 ? "OK" :
+                                                           "NOK"));
                     ResetISR(); // to do: find better way to INSTANTLY restart the MainCPU
                     break;
                 case COMMP_CMD_END:                    // communication finished
@@ -558,26 +568,41 @@ int main(void) {
                 _bootloader_store_ctxt(&_bctxt, sdriver);
                 _bctxt_in_Flash = _bctxt;
 
+
                 // COMMP_CMD_END will follow and we will auto-reboot
             }
 
             if (trigger_reboot) { // we get here after END cmd from file transfer was sent
-                struct comm_ctxt_t ctxt = _get_run_transfer_ctxt();
-                LOG_INFO("partition from run was %x", ctxt.part_nr);
-                if (ctxt.part_nr == COMMP_ROMID_NONE && _bctxt.part == APP_PARTITION_0) { // empty rom, just flashed partition0
-                    storage_set_flash_area(sdriver, &approm1);
-                    _bctxt.part = APP_PARTITION_1; // for correct CRC writing
-                    LOG_INFO("Partition %d requires flashing", _bctxt.part);
-                } else if (ctxt.part_nr == COMMP_ROMID_NONE && _bctxt.part == APP_PARTITION_1) {
-                    LOG_INFO("Partition %d was flashed, launching APPLICATION", _bctxt.part);
-                    _bctxt.part = APP_PARTITION_0;
-                    reset_bootloader = false;
-                    end_bootloader = true;
-                } else if (ctxt.part_nr == COMMP_ROMID_ROM0 || ctxt.part_nr == COMMP_ROMID_ROM1) {
-                    LOG_INFO("Performing RESET after flashing");
-                    reset_bootloader = true;
-                    end_bootloader = true;
+                LOG_OK("Partition was programmed, waiting for flash_tool request");
+
+                // allow boot command from flashed partition
+                if (_bctxt.part == APP_PARTITION_0) {
+                    storage_set_flash_area(sdriver, &approm0);
+                    pstate_0 = _bootloader_ctxt_validate_partition(&_bctxt, APP_PARTITION_0);
                 }
+                if (_bctxt.part == APP_PARTITION_1) {
+                    storage_set_flash_area(sdriver, &approm1);
+                    pstate_1 = _bootloader_ctxt_validate_partition(&_bctxt, APP_PARTITION_1);
+                }
+
+                /*
+                 * struct comm_ctxt_t ctxt = _get_run_transfer_ctxt();
+                 * LOG_INFO("partition from run was %x", ctxt.part_nr);
+                 * if (ctxt.part_nr == COMMP_ROMID_NONE && _bctxt.part == APP_PARTITION_0) { // empty rom, just flashed partition0
+                 *  storage_set_flash_area(sdriver, &approm1);
+                 *  _bctxt.part = APP_PARTITION_1; // for correct CRC writing
+                 *  LOG_INFO("Partition %d requires flashing", _bctxt.part);
+                 * }  else if (ctxt.part_nr == COMMP_ROMID_NONE && _bctxt.part == APP_PARTITION_1) {
+                 *  LOG_INFO("Partition %d was flashed, launching APPLICATION", _bctxt.part);
+                 *  _bctxt.part = APP_PARTITION_0;
+                 *  reset_bootloader = false;
+                 *  end_bootloader = true;
+                 * } else if (ctxt.part_nr == COMMP_ROMID_ROM0 || ctxt.part_nr == COMMP_ROMID_ROM1) {
+                 *  LOG_INFO("Performing RESET after flashing");
+                 *  reset_bootloader = true;
+                 *  end_bootloader = true;
+                 * }
+                 */
             }
 
         }

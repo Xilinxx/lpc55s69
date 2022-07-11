@@ -43,8 +43,15 @@ extern volatile t_uart_data_raw UART_DATA[2]; // main.c
 u8 FPGA_MSGBUF[FPGA_MSGBUF_SIZE]; // uart1 message buffer
 
 // initialize GOWIN data structures
-t_gowin_data GOWIN_DATA = { (u8 *)&FPGA_MSGBUF, (u8 *)&FPGA_MSGBUF,
-                            FPGA_MSGBUF_SIZE,   0,                 0,0, 0, GOWIN_WAIT_FOR_START, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+t_gowin_data GOWIN_DATA = { (u8 *)&FPGA_MSGBUF,   (u8 *)&FPGA_MSGBUF,
+                            FPGA_MSGBUF_SIZE,     0,                   0,
+                            0,                    0,
+                            GOWIN_WAIT_FOR_START,
+                            0,
+                            0,                    0,                   0,
+                            0,                    0,
+                            0,                    0,
+                            0 };
 
 t_gowin_msg GOWIN_MSG_QUEUE[GOWIN_MSG_QUEUE_SIZE] = {};
 
@@ -243,7 +250,8 @@ int8_t process_rx_character(const u8 c) {
 // Called from State_Machine, while data is coming in.
 // Commands start with '$'/startbyte, we process the startbyte as data
 // ------------------------------------------------------------------------------
-void process_rx_data_character(const u8 c, const u16 size) {
+void process_rx_data_character(const u8 c,
+                               const u16 size) {
     // LOG_DEBUG("==%d==", GOWIN_DATA.offset);
     AddRx2Buffer(c);
     if (GOWIN_DATA.offset >= size) {
@@ -272,11 +280,14 @@ void process_rx_data_character(const u8 c, const u16 size) {
                 Main.DeviceState.EthernetStatusBits = *(GOWIN_DATA.MsgBufWr - 1);
                 break;
             case GOWIN_READING_2BYTE:
-                LOG_DEBUG("GOWIN_READING_2BYTE = 0x[%02X %02X]", *(GOWIN_DATA.MsgBufWr - 2), *(GOWIN_DATA.MsgBufWr - 1));
-                Main.DeviceState.PanelCurrent = (u16)(*(GOWIN_DATA.MsgBufWr - 2) + (*(GOWIN_DATA.MsgBufWr - 1) << 8));
+                LOG_DEBUG("GOWIN_READING_2BYTE = 0x[%02X %02X]", *(GOWIN_DATA.MsgBufWr - 2),
+                          *(GOWIN_DATA.MsgBufWr - 1));
+                Main.DeviceState.PanelCurrent = (u16)(*(GOWIN_DATA.MsgBufWr - 2) +
+                                                      (*(GOWIN_DATA.MsgBufWr - 1) << 8));
                 break;
             default:
-                LOG_WARN("unhandled state during rx_data process [%s]", returnStateName(GOWIN_DATA.State));
+                LOG_WARN("unhandled state during rx_data process [%s]", returnStateName(
+                             GOWIN_DATA.State));
                 break;
         }
         GOWIN_Protocol_state_set(GOWIN_WAIT_FOR_START);
@@ -416,9 +427,11 @@ int8_t GOWIN_Protocol(t_uart_channel uart_channel) {
         if ((GOWIN_DATA.State != GOWIN_READING_EDID) &
             (GOWIN_DATA.State != GOWIN_READING_DPCD)) {
             if (isprint(c))
-                LOG_RAW("Gowin RX char is 0x%02X %c\tMsgCount[%d] State[%s]", c, c, GOWIN_DATA.MsgCount, returnStateName(GOWIN_DATA.State));
+                LOG_RAW("Gowin RX char is 0x%02X %c\tMsgCount[%d] State[%s]", c, c,
+                        GOWIN_DATA.MsgCount, returnStateName(GOWIN_DATA.State));
             else
-                LOG_RAW("Gowin RX char is 0x%02X\tMsgCount[%d] State[%s]", c, GOWIN_DATA.MsgCount, returnStateName(GOWIN_DATA.State));
+                LOG_RAW("Gowin RX char is 0x%02X\tMsgCount[%d] State[%s]", c, GOWIN_DATA.MsgCount,
+                        returnStateName(GOWIN_DATA.State));
         }
         UART_DATA[uart_channel].RxBufRd++; // increment read pointer
 
@@ -521,7 +534,8 @@ void GOWIN_Queue_Tx_Msg(t_gowin_command cmd) {
 // ------------------------------------------------------------------------------
 // void GOWIN_Queue_Tx_Msg_Index(t_gowin_command cmd,u8 storage_index)
 //  queue up messages for TX
-void GOWIN_Queue_Tx_Msg_Index(t_gowin_command cmd, u8 storage_index) {
+void GOWIN_Queue_Tx_Msg_Index(t_gowin_command cmd,
+                              u8 storage_index) {
     // we could transmit immediatly, but queue anyhow
 
     u8 newId = MsgIndex;
@@ -533,7 +547,8 @@ void GOWIN_Queue_Tx_Msg_Index(t_gowin_command cmd, u8 storage_index) {
         }
     }
     GOWIN_MSG_QUEUE[newId].cmd = cmd;
-    LOG_DEBUG("GOWIN_Queue_Tx_Msg_Index %s[%d] on index %d", returnCmdName(cmd), storage_index, newId);
+    LOG_DEBUG("GOWIN_Queue_Tx_Msg_Index %s[%d] on index %d", returnCmdName(cmd), storage_index,
+              newId);
 
     if ((cmd == WRITE_EDID) || (cmd == READ_EDID))
         GOWIN_MSG_QUEUE[newId].param = storage_index;
@@ -731,12 +746,15 @@ void GOWIN_Edid_Initialize(u8 verify) {
 
 // ------------------------------------------------------------------------------
 // GOWIN_Compare_EdidDpcd
-unsigned int GOWIN_Compare_EdidDpcd(u8 * block1, u8 * block2, const char * logtxt) {
+unsigned int GOWIN_Compare_EdidDpcd(u8 * block1,
+                                    u8 * block2,
+                                    const char * logtxt) {
     unsigned errorCnt = 0;
 
     for (unsigned i = 0u; i < EDID_SIZE; i++) {
         if (*(block1 + i) != *(block2 + i)) {
-            LOG_ERROR("edid mismatch detected in readback at pos %d (%x<>%x)", i, *(block1 + i), *(block2 + i));
+            LOG_ERROR("edid mismatch detected in readback at pos %d (%x<>%x)", i, *(block1 + i),
+                      *(block2 + i));
             errorCnt++;
             if (errorCnt > 3)
                 break;

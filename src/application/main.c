@@ -63,14 +63,19 @@ u8 GOWIN_RXBUF[GOWIN_RXBUF_SIZE];
 #ifdef BOARD_GAIA
 u8 MCU2_RXBUF[MCU_RXBUF_SIZE];
 volatile t_uart_data_raw UART_DATA[NUMBER_OF_PROTOCOL_UARTS] = {
-    { (u8 *)&MCU_RXBUF,   MCU_RXBUF_SIZE,   (u8 *)&MCU_RXBUF,    (u8 *)&MCU_RXBUF,   0   },
-    { (u8 *)&GOWIN_RXBUF, GOWIN_RXBUF_SIZE, (u8 *)&GOWIN_RXBUF,  (u8 *)&GOWIN_RXBUF, 0   },
-    { (u8 *)&MCU2_RXBUF,  MCU_RXBUF_SIZE,   (u8 *)&MCU2_RXBUF,   (u8 *)&MCU2_RXBUF,  0   }
+    { (u8 *)&MCU_RXBUF,   MCU_RXBUF_SIZE,   (u8 *)&MCU_RXBUF,    (u8 *)&MCU_RXBUF,
+      0                 },
+    { (u8 *)&GOWIN_RXBUF, GOWIN_RXBUF_SIZE, (u8 *)&GOWIN_RXBUF,  (u8 *)&GOWIN_RXBUF,
+      0                    },
+    { (u8 *)&MCU2_RXBUF,  MCU_RXBUF_SIZE,   (u8 *)&MCU2_RXBUF,   (u8 *)&MCU2_RXBUF,
+      0                    }
 };
 #else
 volatile t_uart_data_raw UART_DATA[NUMBER_OF_PROTOCOL_UARTS] = {
-    { (u8 *)&MCU_RXBUF,   MCU_RXBUF_SIZE,   (u8 *)&MCU_RXBUF,   (u8 *)&MCU_RXBUF,   0   },
-    { (u8 *)&GOWIN_RXBUF, GOWIN_RXBUF_SIZE, (u8 *)&GOWIN_RXBUF, (u8 *)&GOWIN_RXBUF, 0   }
+    { (u8 *)&MCU_RXBUF,   MCU_RXBUF_SIZE,   (u8 *)&MCU_RXBUF,   (u8 *)&MCU_RXBUF,
+      0                   },
+    { (u8 *)&GOWIN_RXBUF, GOWIN_RXBUF_SIZE, (u8 *)&GOWIN_RXBUF, (u8 *)&GOWIN_RXBUF,
+      0                    }
 };
 #endif
 
@@ -298,7 +303,6 @@ int main(void) {
         LOG_INFO("retrying usb initialisation..");
         // will auto reboot via wdog
     }
-    ;
 
     // !< Enable i2c-slave interrupts
     i2c_slave_setup();
@@ -319,16 +323,17 @@ int main(void) {
     LOG_INFO("Gowin State is [%s]", (BOARD_Ready_Gowin() == 1 ? "OK" : "NOK"));
 
     // !< Debug output for Flexcomm to MainCPU testing
-    USART_WriteBlocking(BOARD_MAINCPU_USART, g_tipString, (sizeof(g_tipString) / sizeof(g_tipString[0])) - 1);
+    USART_WriteBlocking(BOARD_MAINCPU_USART, g_tipString, (sizeof(g_tipString) /
+                                                           sizeof(g_tipString[0])) - 1);
 
     uint64_t pc = get_pc_reg();
 
     if ( (pc > Main.PartitionInfo.apps[1].start_addr) && (Main.PartitionInfo.part == 0) ) {
         // setting application_request does not change the Flash_info!
-        LOG_WARN("PC(%X) outside partition range!", pc);
+        LOG_WARN("PC(%.8X) outside partition range!", pc);
         Main.PartitionInfo.part = 1;
     } else if ( (pc < Main.PartitionInfo.apps[1].start_addr) && (Main.PartitionInfo.part == 1) ) {
-        LOG_WARN("PC(%X) outside partition range!", pc);
+        LOG_WARN("PC(%.8X) outside partition range!", pc);
         Main.PartitionInfo.part = 0;
     }
 

@@ -119,7 +119,8 @@ static void i2c_slave_callback(__attribute__((unused)) I2C_Type * base,
                                 if (identifier > 0)
                                     Main.Debug.eeprom_address_cnt = identifier;
 
-                                g_slave_buff[0] = Main.Debug.eeprom[Main.Debug.eeprom_address_cnt++];
+                                g_slave_buff[0] =
+                                    Main.Debug.eeprom[Main.Debug.eeprom_address_cnt++];
                             }
                             if (Main.Debug.eeprom_address_cnt >= I2C_EMULATED_EEPROM_SIZE)
                                 Main.Debug.eeprom_address_cnt = 0;
@@ -139,12 +140,14 @@ static void i2c_slave_callback(__attribute__((unused)) I2C_Type * base,
         case kI2C_SlaveReceiveEvent:
             if (verbose)
                 LOG_DEBUG("{0x%02X} kI2C_SlaveReceiveEvent -- count[%d] expected[%d] %s",
-                          address, xfer->transferredCount, (int)xfer->rxSize, (read) ? "READ" : "WRITE");
+                          address, xfer->transferredCount, (int)xfer->rxSize, (read) ? "READ" :
+                          "WRITE");
             /*  Update information for received process */
             xfer->rxData = g_slave_buff;
             if ( !read ) { // WRITE
                 if (verbose)
-                    LOG_DEBUG("{0x%02X} kI2C_SlaveReceiveEvent -- 1st data byte [0x%02X]", g_slave_buff[0]);
+                    LOG_DEBUG("{0x%02X} kI2C_SlaveReceiveEvent -- 1st data byte [0x%02X]",
+                              g_slave_buff[0]);
                 switch (address) {
                     case I2C_MASTER_SLAVE_ADDR_7BIT:
                         if (expectedBytes > 0) {
@@ -175,7 +178,8 @@ static void i2c_slave_callback(__attribute__((unused)) I2C_Type * base,
                 LOG_WARN("i2c address mismatch");
             g_SlaveCompletionFlag = false;
             if (verbose)
-                LOG_DEBUG("{0x%02X} kI2C_SlaveAddressMatchEvent - %s", address, (read) ? "READ" : "WRITE");
+                LOG_DEBUG("{0x%02X} kI2C_SlaveAddressMatchEvent - %s", address, (read) ? "READ" :
+                          "WRITE");
             xfer->rxData = NULL;
             xfer->rxSize = 0;
             break;
@@ -189,11 +193,13 @@ static void i2c_slave_callback(__attribute__((unused)) I2C_Type * base,
                         if ( xfer->transferredCount == I2C_CMD_LENGTH ) {
                             if ( g_slave_buff[0] == I2C_TOGGLE_TX_SIZE_CMD ) {
                                 g_SlaveTxEepromSize = (g_slave_buff[1] == 1);
-                                LOG_DEBUG("{0x%02x} Set tx to MaxSize (8byte) %s", address, ((g_SlaveTxEepromSize) ? "ON" : "OFF"));
+                                LOG_DEBUG("{0x%02x} Set tx to MaxSize (8byte) %s", address,
+                                          ((g_SlaveTxEepromSize) ? "ON" : "OFF"));
                             }
                         }
                         if ( xfer->transferredCount > 8 )
-                            LOG_WARN("{0x%02x} xfer->transferredCount %x", address, xfer->transferredCount);
+                            LOG_WARN("{0x%02x} xfer->transferredCount %x", address,
+                                     xfer->transferredCount);
                         // I2C_EMULATED_EEPROM_SIZE-byte write supported
                         if ( xfer->transferredCount == 8 ) {
                             for (int i = 0; i < I2C_EMULATED_EEPROM_SIZE; i++) {
@@ -211,7 +217,8 @@ static void i2c_slave_callback(__attribute__((unused)) I2C_Type * base,
                         if ( xfer->transferredCount == I2C_CMD_LENGTH ) {
                             if (g_slave_buff[0] == I2C_TOGGLE_TX_SIZE_CMD ) {
                                 g_SlaveTxPageSize = (g_slave_buff[1] == 1);
-                                LOG_DEBUG("{0x%02x} Set Page tx to %s", address, ((g_SlaveTxPageSize) ? "ON" : "OFF"));
+                                LOG_DEBUG("{0x%02x} Set Page tx to %s", address,
+                                          ((g_SlaveTxPageSize) ? "ON" : "OFF"));
                             }
                         }
                         break;
@@ -234,14 +241,15 @@ static void i2c_slave_callback(__attribute__((unused)) I2C_Type * base,
                 }
             }
             if (verbose) {
-                LOG_DEBUG("{0x%02X} kI2C_SlaveCompletionEvent [%x %x]%x, transfer count[%d] Status[%X] %s",
-                          address,
-                          g_slave_buff[0],
-                          g_slave_buff[1],
-                          *((uint8_t *)userData), // = g_slave_buff[0]
-                          xfer->transferredCount,
-                          xfer->completionStatus,
-                          (read) ? "READ" : "WRITE");
+                LOG_DEBUG(
+                    "{0x%02X} kI2C_SlaveCompletionEvent [%x %x]%x, transfer count[%d] Status[%X] %s",
+                    address,
+                    g_slave_buff[0],
+                    g_slave_buff[1],
+                    *((uint8_t *)userData),       // = g_slave_buff[0]
+                    xfer->transferredCount,
+                    xfer->completionStatus,
+                    (read) ? "READ" : "WRITE");
                 LOG_DEBUG("--- I2C_SlaveCompletionEvent --- ");
             }
             memset(g_slave_buff, 0, sizeof(g_slave_buff));
@@ -281,8 +289,10 @@ int i2c_slave_setup() {
     I2C_SlaveInit(FLEXCOMM_I2C_USB_SLAVE, &slaveConfig, I2C_SLAVE_CLOCK_FREQUENCY);
 
     /* Create the I2C handle for the non-blocking transfer */
-    I2C_SlaveTransferCreateHandle(FLEXCOMM_I2C_MAINCPU_SLAVE, &g_s_handle_maincpu, i2c_slave_callback, g_slave_buff);
-    I2C_SlaveTransferCreateHandle(FLEXCOMM_I2C_USB_SLAVE, &g_s_handle_usb, i2c_slave_callback, g_slave_buff);
+    I2C_SlaveTransferCreateHandle(FLEXCOMM_I2C_MAINCPU_SLAVE, &g_s_handle_maincpu,
+                                  i2c_slave_callback, g_slave_buff);
+    I2C_SlaveTransferCreateHandle(FLEXCOMM_I2C_USB_SLAVE, &g_s_handle_usb, i2c_slave_callback,
+                                  g_slave_buff);
 
     /* Start accepting I2C transfers on the I2C slave peripheral */
     reVal = I2C_SlaveTransferNonBlocking(FLEXCOMM_I2C_MAINCPU_SLAVE, &g_s_handle_maincpu,

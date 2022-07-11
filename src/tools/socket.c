@@ -19,7 +19,9 @@
 
 #define BUF_SIZE 2048
 
-struct conn_t * socket_init_connection(role_t role, int protocol, char * ip,
+struct conn_t * socket_init_connection(role_t role,
+                                       int protocol,
+                                       char * ip,
                                        int port) {
     struct conn_t * con;
 
@@ -46,7 +48,8 @@ struct conn_t * socket_init_connection(role_t role, int protocol, char * ip,
     return con;
 }
 
-int socket_create_socket(struct conn_t * con, int options) {
+int socket_create_socket(struct conn_t * con,
+                         int options) {
     struct hostent * server;
 
     if (con->protocol == IPPROTO_UDP) {

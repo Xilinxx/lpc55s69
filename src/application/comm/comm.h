@@ -67,6 +67,8 @@ bool sharedram_bootloader_request_write(u8 request);
 u8   sharedram_bootloader_request_read();
 
 void reply_invalid(const u8 nack_type);
-void sharedram_log_read(u8 * RxBuf, u8 Offset, u8 NrOfBytes);
+void sharedram_log_read(u8 * RxBuf,
+                        u8 Offset,
+                        u8 NrOfBytes);
 
 #endif // _COMM_H_

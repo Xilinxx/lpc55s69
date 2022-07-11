@@ -38,6 +38,7 @@ Now the tool can actually do something. This is either via:
 `-c` to manually send a command. (Available commands: "boot", "info", "swap", "reset", "wdog", "powoff", "wdog", "wipespi0", "wipespi1", "infospi")
 
 ````txt
+  - version: git version info
 	- boot: Force an application boot
 	- force: Retrieve bootloader context (Partition info)
 	- swap: Swap partition to be written to
@@ -45,11 +46,13 @@ Now the tool can actually do something. This is either via:
 	- powon: Wake up mainCpu (removed, maincpu is sleeping!)
 	- powoff: put mainCpu in sleep
 	- wdog: Trigger the watchdog
-	- infospi: Fetches the spi partition context
+	- info: Reports flash partition info
+	- infospi: Reports the spi partition context
 	- wipespi0/1: Erases spi0/1 flash partition
   - setspi0/1: Select spi0/1 flash partition for readback
+  - reconfigure: Toggle the reconfigure line of the gowin
 	- gp2boot: Sends the application code to bootcode (Application code command)
-`-f` to send a application bin file
+`-f` to send an application bin file
 `-z` special case, this triggers a debug handler in the COMMP Protocol. This is useful to manually trigger a given action which is not a bootloader command. (For example, force a wipe of the flash during debugging).
 `-t` force calculation of crc only, argument is -f `app-flash0.bin`
 `-g <0,1>` Indicates binary firmware file is for Gowin(SPI flash) partition write nr
@@ -72,26 +75,35 @@ The gpmcu bootloader will check for **two** valid partitions before booting into
 So we need to execute following commands on a new board,
 
 ```bash
+flash_tool -d "serial" -p "/dev/ttyPS1:230400" -c "setrom0"
 flash_tool -d "serial" -p "/dev/ttyPS1:230400" -f "app-flash0.bin"
+
+flash_tool -d "serial" -p "/dev/ttyPS1:230400" -c "setrom1"
 flash_tool -d "serial" -p "/dev/ttyPS1:230400" -f "app-flash1.bin"
+
+flash_tool -d "serial" -p "/dev/ttyPS1:230400" -c "reset"
 ```
 
 When flashing with 2 valid partitions, the target partition for flashing will be the one NOT in use.
 After flashing you can execute the `-c "swap"` command to switch boot-partition.
-The bootloader will indicate which partition he expects to be flashed.
+The bootloader will indicate which partition he expects to be flashed.  
+To not get confused, you can also select which partition to write with the `-c "setrom0"` command.
+
+When flashing partitions, the flash_tool is in control of booting. Launching a `-c reset` will, verify all partitions before booting into application code.
 
 ---
 
 ## Update procedure Gowin SPI Flash via <u>BOOTLOADER-code</u>
 
-The bootcode got functionality for flashing gowin code into the SPI flash. But we can start with requesting the partition info.
+The bootcode has functionality for flashing gowin code into the SPI flash. But we can start with requesting the partition info.  
+<u>Note:</u> the `current partition` info will always be the 1st partition because the reconfigure of the gowin is not worked out completely.
 
 ```sh
 flash_tool -c "infospi"
 
 SPI info (struct size is 56 bytes)
 Nr of Partitions: 2
-Current partition: 0xf (4 bytes)
+Current partition: 0x0 (4 bytes)
 Own CRC32: 0xf022fd8f
 Partition #0 (used)
          start    @ 0x0
@@ -123,14 +135,19 @@ Verification could be done by reading back the content:
 
 ```bash
 flash_tool -c setspi0
-flash_tool -r "readbackfile0.bin" -b 221368
+flash_tool -r "gw-readbackfile0.bin" -b 221368
 or
 flash_tool -c setspi1
-flash_tool -r "readbackfile1.bin" -b 221368
+flash_tool -r "gw-readbackfile1.bin" -b 221368
 ```
 
 Now you could verify the sent file and the received file `md5sum` or `diff`.  
 The only partition for startup is '0'. Partition '1' is meant for failsafe restore. (to be implemented in application code) We could actually erase partition0 and then the gowin will fetch partition1 code!
+
+The flash_tool can also be used to calculate the crc32 of a file and compare it with the received information from `infospi`-command.  
+```bash
+flash_tool -r "gw-greenpower.bin" -t
+```
 
 ---
 

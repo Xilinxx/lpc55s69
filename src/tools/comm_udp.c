@@ -34,7 +34,9 @@ static int _comm_udp_init(void * drv) {
     return 0;
 }
 
-static int _comm_udp_write(void * drv, uint8_t * buffer, size_t len) {
+static int _comm_udp_write(void * drv,
+                           uint8_t * buffer,
+                           size_t len) {
     struct comm_driver_t * driver = (struct comm_driver_t *)drv;
 
     if (!drv) {
@@ -66,7 +68,9 @@ static int _comm_udp_write(void * drv, uint8_t * buffer, size_t len) {
     return written;
 }
 
-static int _comm_udp_read(void * drv, uint8_t * buffer, size_t * len) {
+static int _comm_udp_read(void * drv,
+                          uint8_t * buffer,
+                          size_t * len) {
     struct comm_driver_t * driver = (struct comm_driver_t *)drv;
 
     if (!drv) {

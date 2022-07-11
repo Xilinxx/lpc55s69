@@ -13,6 +13,7 @@
 #ifndef UNIT_TEST
 #include "board.h"
 #include "flash_helper.h"
+#include "spi_flash_helper.h"
 #endif
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
@@ -37,6 +38,7 @@ const u8 * IdentifierInternalAddress[] = {
     (u8 *)&Main.DeviceState,
     (u8 *)&Main.Diagnostics,
     (u8 *)&Main.PartitionInfo,
+    (u8 *)&Main.GowinPartitionInfo,
     (u8 *)&Main.Edid,
     (u8 *)&Main.Dpcd,
     0 // debugLog
@@ -48,6 +50,7 @@ const u8 IdentifierAccessType[NumberOfIdentifiers] = {
     READ,  // DeviceState
     READ,  // Diagnostics
     READ,  // PartitionInfo
+    READ,  // GowinPartitionInfo
     WRITE, // Edid
     WRITE, // Dpcd
     0      // DebugLog
@@ -59,6 +62,7 @@ const u32 IdentifierMaxLength[NumberOfIdentifiers] = {
     sizeof(Main.DeviceState),
     sizeof(Main.Diagnostics),
     sizeof(Main.PartitionInfo),
+    sizeof(Main.GowinPartitionInfo),
     sizeof(Main.Edid),
     sizeof(Main.Dpcd),
     0
@@ -79,16 +83,79 @@ static const u8 dpcdInitValues[] =
     /*0x600..0x600 --> 0x0*/ 0x1,
     /*fill @ 0x1*/ 0,
     /*0x2002..0x2003 --> 0x2*/ 0x1, 0x0,
-    /*0x1a0..0x1a3 --> 0x4*/ 0x0,   0x0,            0x0,    0x0,
-    /*0x1c0..0x1c3 --> 0x8*/ 0x0,   0x0,            0x0,    0x0,
-    /*0x200c..0x200f --> 0xc*/ 0x77,0x77,           0x81,   0x3,
-    /*0x200..0x207 --> 0x10*/ 0x1,  0x0,            0x77,   0x77, 0x81,  0x3,   0x0,  0x0,
-    /*fill @ 0x18*/ 0,              0,              0,      0,    0,     0,     0,    0,
-    /*0x0..0xf --> 0x20*/ 0x12,     0x14,           0xc4,   0x1,  0x1,   0x1,   0x1,  0x80, 0x2,  0x0,   0x0,  0x0, 0x0, 0x0, 0x0, 0x0,
-    /*0x30..0x3f --> 0x30*/ 0x0,    0x0,            0x0,    0x0,  0x0,   0x0,   0x0,  0x0,  0x0,  0x0,   0x0,  0x0, 0x0, 0x0, 0x0, 0x0,
-    /*0x300..0x30f --> 0x40*/ 0x0,  0x0,            0x0,    0x0,  0x0,   0x0,   0x0,  0x0,  0x0,  0x0,   0x0,  0x0, 0x0, 0x0, 0x0, 0x0,
-    /*0x400..0x40f --> 0x50*/ 0x0,  0x1b,           0xc5,   0x42, 0x49,  0x54,  0x45, 0x43, 0x0,  0x12,  0x1,  0x2, 0x0, 0x0, 0x0, 0x0,
-    /*0x100..0x11f --> 0x60*/ 0x6,  0x1,            0x0,    0x0,  0x0,   0x0,   0x0,  0x0,  0x1,  0x0,   0x0,  0x0, 0x0, 0x0, 0x0, 0x0,0x0,0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+    /*0x1a0..0x1a3 --> 0x4*/ 0x0,   0x0,                             0x0,
+    0x0,
+    /*0x1c0..0x1c3 --> 0x8*/ 0x0,   0x0,                             0x0,
+    0x0,
+    /*0x200c..0x200f --> 0xc*/ 0x77,0x77,                            0x81,
+    0x3,
+    /*0x200..0x207 --> 0x10*/ 0x1,  0x0,                             0x77,
+    0x77,
+    0x81,
+    0x3,
+    0x0,                            0x0,
+    /*fill @ 0x18*/ 0,              0,                               0,
+    0,
+    0,
+    0,
+    0,                              0,
+    /*0x0..0xf --> 0x20*/ 0x12,     0x14,                            0xc4,
+    0x1,
+    0x1,
+    0x1,
+    0x1,                            0x80,                            0x2,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    /*0x30..0x3f --> 0x30*/ 0x0,    0x0,                             0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    /*0x300..0x30f --> 0x40*/ 0x0,  0x0,                             0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    /*0x400..0x40f --> 0x50*/ 0x0,  0x1b,                            0xc5,
+    0x42,
+    0x49,
+    0x54,
+    0x45,                           0x43,                            0x0,
+    0x12,
+    0x1,
+    0x2,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    /*0x100..0x11f --> 0x60*/ 0x6,  0x1,                             0x0,
+    0x0,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x1,
+    0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,                            0x0,                             0x0,
+    0x0,
+    0x0,
+    0x0,                            0x0
 };
 
 static const u8 edidInitValues[] =
@@ -200,6 +267,14 @@ void initialize_global_data_map() {
         Main.PartitionInfo.apps[1] = bctxt.apps[1];
     }
 
+    if (init_spi_rom()) {
+        struct spi_ctxt_t spi_ctxt = get_spi_rom_context();
+        Main.GowinPartitionInfo.gowin[0] = spi_ctxt.gowin[0];
+        Main.GowinPartitionInfo.gowin[1] = spi_ctxt.gowin[1];
+        LOG_INFO("SPI partition bitfile crc %.8x", Main.GowinPartitionInfo.gowin[0].bitfile_crc);
+        LOG_INFO("SPI partition bitfile size %.8x", Main.GowinPartitionInfo.gowin[0].bitfile_size);
+    }
+
     // Set LOGGING SRAM pointers - predefined shared memory with bootloader
     Main.sramLogData.mem_base = (u32 *)&__ssram_start__;
     Main.sramLogData.mem_start = (u32 *)&__ssram_log_start__;
@@ -228,7 +303,8 @@ void initialize_global_data_map() {
  *
  * @returns  void
  */
-void store_edid_data(u8 index, u8 * data) {
+void store_edid_data(u8 index,
+                     u8 * data) {
     // LOG_DEBUG("store_edid_data() 1st byte %x at address 0x%02X", *data, data);
     for (u16 i = 0u; i < EDID_SIZE; i++) {
         if (index == 0) {
@@ -249,7 +325,8 @@ void store_edid_data(u8 index, u8 * data) {
  *
  * @returns  void
  */
-void store_dpcd_data(u8 index, u8 * data) {
+void store_dpcd_data(u8 index,
+                     u8 * data) {
     // LOG_DEBUG("store_dpcd_data() 1st byte %x at address 0x%02X, index[%d]", *data, data, index);
     for (u16 i = 0u; i < EDID_SIZE; i++) {
         if (index == 0) {

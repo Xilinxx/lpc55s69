@@ -156,7 +156,8 @@ void spi_master_setup() {
  * @brief spi_read_page()
  * Helper function for reading back data inside the SPI Flash with printout
  */
-void spi_read_page(u16 startpage, bool verbose) {
+void spi_read_page(u16 startpage,
+                   bool verbose) {
     int ret = is25xp_bread(startpage, 1, Main.Debug.SpiFlashPage, verbose);
 
     if (!verbose)
@@ -271,7 +272,8 @@ bool invalid_spi_cmd(t_spi_command cmd) {
  *             The data pointer first 3 bytes are cmd + 2 data bytes
  * @param size size of the data
  */
-void spi_queue_msg_param(u8 * data, u16 size) {
+void spi_queue_msg_param(u8 * data,
+                         u16 size) {
     if (invalid_spi_cmd(data[0]))
         return;
 
@@ -419,7 +421,8 @@ void spi_queue_process() {
                 verbose = false;
             else
                 verbose = true;
-            LOG_DEBUG("input[%x]->spi verbose is %s", SPI_MSG_QUEUE[MsgIndex].param[0], verbose ? "ON" : "OFF");
+            LOG_DEBUG("input[%x]->spi verbose is %s", SPI_MSG_QUEUE[MsgIndex].param[0], verbose ?
+                      "ON" : "OFF");
             break;
         default:
             break;

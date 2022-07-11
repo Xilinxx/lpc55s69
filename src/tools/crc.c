@@ -15,7 +15,9 @@
 #include "logger.h"
 #include "crc_linux.h"
 
-uint32_t _crc32(uint32_t crc, const char * buf, size_t len) {
+uint32_t _crc32(uint32_t crc,
+                const char * buf,
+                size_t len) {
     static uint32_t table[256];
     static int have_table = 0;
     uint32_t rem;

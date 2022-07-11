@@ -44,20 +44,29 @@ static struct comm_ctxt_t run_transfer_ctxt;
 
 
 /* Helpers interfaces/commp_cmd_helpers.c implementation */
-int _comm_send_generic_cmd(struct comm_driver_t * cdriver, comm_proto_cmd_t cmd);
-int _comm_send_crc(struct comm_driver_t * cdriver, uint32_t crc);
+int _comm_send_generic_cmd(struct comm_driver_t * cdriver,
+                           comm_proto_cmd_t cmd);
+int _comm_send_crc(struct comm_driver_t * cdriver,
+                   uint32_t crc);
 
 uint32_t _comm_get_crc(uint8_t * data);
 
 /* Helpers from commp_opcode_helpers.c */
 void _reset_transfer_ctxt(struct comm_ctxt_t * ctxt);
 void _clear_transfer_ctxt(struct comm_ctxt_t * ctxt);
-int _comm_send_wrq(struct comm_driver_t * cdriver, struct comm_ctxt_t * ctxt);
-int _comm_send_rrq(struct comm_driver_t * cdriver, struct comm_ctxt_t * ctxt);
-int _comm_send_ack(struct comm_driver_t * cdriver, struct comm_ctxt_t * ctxt);
-int _comm_send_err(struct comm_driver_t * cdriver, uint16_t errorcode, char * errorstr);
+int _comm_send_wrq(struct comm_driver_t * cdriver,
+                   struct comm_ctxt_t * ctxt);
+int _comm_send_rrq(struct comm_driver_t * cdriver,
+                   struct comm_ctxt_t * ctxt);
+int _comm_send_ack(struct comm_driver_t * cdriver,
+                   struct comm_ctxt_t * ctxt);
+int _comm_send_err(struct comm_driver_t * cdriver,
+                   uint16_t errorcode,
+                   char * errorstr);
 
-int comm_protocol_retrieve_binary(struct comm_driver_t * cdriver, struct storage_driver_t * sdriver, struct comm_ctxt_t * ctxt);
+int comm_protocol_retrieve_binary(struct comm_driver_t * cdriver,
+                                  struct storage_driver_t * sdriver,
+                                  struct comm_ctxt_t * ctxt);
 
 static int _run_driver_init() {
     for (int i = 0; cdrivers[i] != NULL; i++) {
@@ -86,7 +95,8 @@ int comm_protocol_init() {
     return 0;
 }
 
-bool comm_protocol_is_packet_type(uint8_t * data, comm_proto_opcode_t type) {
+bool comm_protocol_is_packet_type(uint8_t * data,
+                                  comm_proto_opcode_t type) {
     if (data[COMMP_OPCODE_BYTE] == type) {
         return true;
     }
@@ -100,7 +110,8 @@ uint16_t comm_protocol_get_command_type(uint8_t * data) {
     return cmdcode;
 }
 
-bool comm_protocol_is_command_type(uint8_t * data, comm_proto_cmd_t type) {
+bool comm_protocol_is_command_type(uint8_t * data,
+                                   comm_proto_cmd_t type) {
     uint16_t cmdcode = comm_protocol_get_command_type(data);
 
     if (cmdcode == type) {
@@ -109,7 +120,8 @@ bool comm_protocol_is_command_type(uint8_t * data, comm_proto_cmd_t type) {
     return false;
 }
 
-int comm_protocol_write_data(struct comm_driver_t * drv, uint8_t * data,
+int comm_protocol_write_data(struct comm_driver_t * drv,
+                             uint8_t * data,
                              size_t len) {
     int written = -1;
 
@@ -124,7 +136,8 @@ int comm_protocol_write_data(struct comm_driver_t * drv, uint8_t * data,
     return written;
 }
 
-int comm_protocol_read_data(struct comm_driver_t * drv, uint8_t * data,
+int comm_protocol_read_data(struct comm_driver_t * drv,
+                            uint8_t * data,
                             size_t * len) {
     int read = -1;
 
@@ -216,12 +229,12 @@ int comm_protocol_run(struct bootloader_ctxt_t * bctxt,
                 (recv_buffer[COMMP_RRQ_LENGTH_OFFSET + 1] << 16) +
                 (recv_buffer[COMMP_RRQ_LENGTH_OFFSET + 2] << 8) +
                 (recv_buffer[COMMP_RRQ_LENGTH_OFFSET + 3]);
-            char device[strlen(COMMP_ROMNAME_ROM0)];             // Keep ROMNAME-length identical!
+            char device[strlen(COMMP_ROMNAME_ROM0)];               // Keep ROMNAME-length identical!
             memcpy(device, recv_buffer + COMMP_RRQ_ROMNAME_OFFSET, strlen(COMMP_ROMNAME_ROM0));
             if (!strcmp((char *)device, COMMP_ROMNAME_SPIFLASH1)) {
                 run_transfer_ctxt.part_nr = COMMP_ROMID_SPIFLASH1;
             } else {
-                run_transfer_ctxt.part_nr = COMMP_ROMID_SPIFLASH0;                 // spi0  -> use spidriver
+                run_transfer_ctxt.part_nr = COMMP_ROMID_SPIFLASH0; // spi0  -> use spidriver
             }
             LOG_INFO("ReadRequest device[%s] size[%d]", device, run_transfer_ctxt.rom_readsize);
             comm_protocol_retrieve_binary(cdriver, spidriver, &run_transfer_ctxt);
@@ -264,10 +277,13 @@ int comm_protocol_run(struct bootloader_ctxt_t * bctxt,
                                 LOG_WARN("missing spi ctxt initialisation");
                             spi_ctxt->gowin[partition].bitfile_size = (uint32_t)filesize;
                             spi_ctxt->gowin[partition].bitfile_crc = crc;
-                            spi_ctxt->gowin[partition].crc = storage_crc_storage(spidriver, spi_ctxt->gowin[partition].image_size);
+                            spi_ctxt->gowin[partition].crc = storage_crc_storage(spidriver,
+                                                                                 spi_ctxt->gowin[
+                                                                                     partition].
+                                                                                 image_size);
                             spi_ctxt->part = partition;                     // will contain last flashed partition
                             _comm_send_ack(cdriver, &run_transfer_ctxt);
-                            return COMMP_CMD_WRITE_SPI_CTXT;                     // triggers storage of context in main.c
+                            return COMMP_CMD_WRITE_SPI_CTXT;                // triggers storage of context in main.c
                             end_stack = true;
                         } else
                             LOG_ERROR("CRC received for spi is 0x%X <> 0x%X calculated", rcrc, crc);
@@ -296,6 +312,7 @@ int comm_protocol_run(struct bootloader_ctxt_t * bctxt,
                 case COMMP_CMD_SPI_END:
                 case COMMP_CMD_BOOT:
                 case COMMP_CMD_BOOTINFO:
+                case COMMP_CMD_VERINFO:
                 case COMMP_CMD_PWR_ON:
                 case COMMP_CMD_PWR_OFF:
                 case COMMP_CMD_RECONFIG_GOWIN:
@@ -340,7 +357,10 @@ int comm_protocol_run(struct bootloader_ctxt_t * bctxt,
 
 // comm_protocol_transfer_binary - flash_tool code
 int comm_protocol_transfer_binary(struct comm_driver_t * cdriver,
-                                  uint8_t * buffer, size_t len, uint8_t rom_nr, uint32_t crc) {
+                                  uint8_t * buffer,
+                                  size_t len,
+                                  uint8_t rom_nr,
+                                  uint32_t crc) {
     struct comm_ctxt_t transfer_ctxt = {
         .transfer_in_progress = false,
         .crc_received         = false,
@@ -577,7 +597,8 @@ int comm_protocol_retrieve_binary(struct comm_driver_t * cdriver,
             _comm_send_err(cdriver, COMMP_ERR_SEQ, "Invalid sequence of packets");
 
             LOG_ERROR("Received packet makes no sense");
-            LOG_ERROR("4byte [%x %x %x %x]", in_buffer[0], in_buffer[1], in_buffer[2], in_buffer[3]);
+            LOG_ERROR("4byte [%x %x %x %x]", in_buffer[0], in_buffer[1], in_buffer[2],
+                      in_buffer[3]);
 
             return -1;
         }
@@ -627,13 +648,15 @@ int comm_protocol_retrieve_binary(struct comm_driver_t * cdriver,
             }
         } else {
             LOG_ERROR("Received packet makes no sense!");
-            LOG_ERROR("4byte [%x %x %x %x]", in_buffer[0], in_buffer[1], in_buffer[2], in_buffer[3]);
+            LOG_ERROR("4byte [%x %x %x %x]", in_buffer[0], in_buffer[1], in_buffer[2],
+                      in_buffer[3]);
             return -1;
         }
     }
 
 
-    if (transfer_ctxt.part_nr == COMMP_ROMID_SPIFLASH0 || transfer_ctxt.part_nr == COMMP_ROMID_SPIFLASH1)
+    if (transfer_ctxt.part_nr == COMMP_ROMID_SPIFLASH0 || transfer_ctxt.part_nr ==
+        COMMP_ROMID_SPIFLASH1)
         error = _comm_send_generic_cmd(cdriver, COMMP_CMD_SPI_END);
     else
         error = _comm_send_generic_cmd(cdriver, COMMP_CMD_END);

@@ -40,7 +40,7 @@ static int _read_flash_storage(struct storage_driver_t * sdriver,
     LOG_INFO("Read from flash backed storage driver");
     struct flash_area_t * farea = STORAGE_GETPRIV(sdriver);
 
-    LOG_DEBUG("Reading from %x, len: %d", farea->start_addr, len);
+    LOG_DEBUG("Reading from 0x%.8X, len: %d", farea->start_addr, len);
 
     __DSB();
     __ISB();
@@ -53,10 +53,11 @@ static int _read_flash_storage(struct storage_driver_t * sdriver,
 }
 
 static int _write_flash_storage(struct storage_driver_t * sdriver,
-                                uint8_t * buffer, size_t len) {
+                                uint8_t * buffer,
+                                size_t len) {
     struct flash_area_t * farea = STORAGE_GETPRIV(sdriver);
 
-    LOG_DEBUG("Writing len %d to 0x%x + 0x%x", len,
+    LOG_DEBUG("Writing len %d to 0x%.8X + 0x%X", len,
               farea->start_addr, farea->offset);
 
     int err = FLASH_Program(&_fcfg, farea->start_addr +
@@ -84,11 +85,10 @@ static int _erase_flash_storage(struct storage_driver_t * sdriver) {
     LOG_INFO("Erasing flash backend");
     struct flash_area_t * farea = STORAGE_GETPRIV(sdriver);
 
-    /* /1* TODO: This needs to be dynamics *1/ */
     uint32_t * app_code = (uint32_t *)farea->start_addr;
     uint32_t app_size = farea->size;
 
-    LOG_INFO("Addr + size: %x %d", app_code, app_size);
+    LOG_INFO("Addr + size: 0x%.8X %d", app_code, app_size);
     int status = FLASH_Erase(&_fcfg, (uint32_t)app_code,
                              app_size, kFLASH_ApiEraseKey);
     if (status != kStatus_Success) {
@@ -113,7 +113,7 @@ static uint32_t _crc_flash_storage(struct storage_driver_t * sdriver,
 
     uint32_t * start_addr = (uint32_t *)farea->start_addr;
 
-    return crc_run_crc32((uint8_t *)start_addr, farea->size);
+    return crc_run_crc32((uint32_t)start_addr, farea->size);
 }
 
 static int _close_flash_storage(struct storage_driver_t * sdriver) {
@@ -142,7 +142,9 @@ struct storage_driver_t * storage_new_flash_driver() {
     return &fdriver;
 }
 
-struct flash_area_t storage_new_flash_area(char * name, uint32_t addr, uint32_t
+struct flash_area_t storage_new_flash_area(char * name,
+                                           uint32_t addr,
+                                           uint32_t
                                            size) {
     struct flash_area_t area = {
         .start_addr = addr,
@@ -152,15 +154,15 @@ struct flash_area_t storage_new_flash_area(char * name, uint32_t addr, uint32_t
 
     strncpy(area.area_name, name, MAX_AREA_NAME);
 
-    LOG_DEBUG("New flash area [%s] @ 0x%.8x with size %dkB",
+    LOG_DEBUG("New flash area [%s] @ 0x%.8X with size %dkB",
               area.area_name,
               area.start_addr,
               (area.size / 1024));
     return area;
 }
 
-void storage_set_flash_area(struct storage_driver_t * sdriver, struct
-                            flash_area_t * farea) {
+void storage_set_flash_area(struct storage_driver_t * sdriver,
+                            struct flash_area_t * farea) {
     LOG_INFO("Setting flash area %s @%p", farea->area_name, farea->start_addr);
     STORAGE_SETPRIV(sdriver, farea);
 }
@@ -169,10 +171,16 @@ bool storage_is_empty_partition(struct storage_driver_t * sdriver) {
     struct flash_area_t * farea = STORAGE_GETPRIV(sdriver);
     int err = FLASH_VerifyErase(&_fcfg, farea->start_addr, farea->size);
 
-    LOG_DEBUG("FLASH_VerifyErase %x %x res(0x%x)", farea->start_addr, farea->size, err);
     if (err == kStatus_Success) {
+        LOG_DEBUG("Partition 0x%.8X is empty", farea->start_addr);
         return true;
     }
+
+    LOG_DEBUG("Partition not empty 0x%.8X %x, FLASH_VerifyErase ret(0x%x)",
+              farea->start_addr,
+              farea->size,
+              err);
+
     return false;
 }
 
@@ -185,7 +193,7 @@ int storage_wipe_entire_flash(struct storage_driver_t * sdriver) {
     uint32_t start = (uint32_t)farea->start_addr;
     uint32_t size = (uint32_t)farea->size;
 
-    LOG_INFO("Addr + size: %x + 0x%x", start, size);
+    LOG_INFO("Addr + size: 0x%.8X + 0x%x", start, size);
 
     if (size % 512 != 0) {
         LOG_ERROR("erase size alignment error");
@@ -206,27 +214,6 @@ int storage_wipe_entire_flash(struct storage_driver_t * sdriver) {
         LOG_ERROR("Verifying flash erase failed!");
         return -1;
     }
-
-/*
- *      uint32_t *app_code = (uint32_t *)&__approm0_start__;
- *      uint32_t *app_size = (uint32_t *)(&__approm0_size__);
- *
- *      // here we assume app_size *2 = both partitions
- *
- *      LOG_INFO("Addr + size: %x %x", app_code, ((uint32_t)app_size)*2);
- *      int status = FLASH_Erase(&_fcfg, (uint32_t)app_code,
- *                               ((uint32_t)app_size)*2, kFLASH_ApiEraseKey);
- *      if (status != kStatus_Success) {
- *              LOG_ERROR("Failed to erase flash partition0");
- *              return -1;
- *      }
- *
- *      status = FLASH_VerifyErase(&_fcfg, (uint32_t)app_code, ((uint32_t)app_size)*2);
- *      if (status != kStatus_Success) {
- *              LOG_ERROR("Verifying flash erase failed!");
- *              return -1;
- *      }
- */
 
     LOG_OK("Verify Erased done!");
     return 0;

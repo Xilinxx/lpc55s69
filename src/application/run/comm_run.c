@@ -44,14 +44,21 @@
 // ------------------------------------------------------------------------------
 const tCommand Command[] = {
     // { Cmd,             MsgLength,                Function }
-    { CMD_READ_BYTE,   0,                      cByteRead                          },
-    { CMD_WRITE_BYTE,  CMD_WRITE_BYTE_LENGTH,  cByteWrite                         },
-    { CMD_READ_4BYTE,  0,                      c4ByteRead                         },
-    { CMD_WRITE_4BYTE, CMD_WRITE_4BYTE_LENGTH, c4ByteWrite                        },
-    { CMD_READ_ARRAY,  CMD_READ_ARRAY_LENGTH,  cArrayRead                         },
-    { CMD_WRITE_ARRAY, 0,                      cArrayWrite                        },
+    { CMD_READ_BYTE,   0,
+      cByteRead                                                                                         },
+    { CMD_WRITE_BYTE,  CMD_WRITE_BYTE_LENGTH,
+      cByteWrite                                                                                                              },
+    { CMD_READ_4BYTE,  0,
+      c4ByteRead                                                                                                                                   },
+    { CMD_WRITE_4BYTE, CMD_WRITE_4BYTE_LENGTH,
+      c4ByteWrite                                                                                                                                                       },
+    { CMD_READ_ARRAY,  CMD_READ_ARRAY_LENGTH,
+      cArrayRead                                                                                                                                                                             },
+    { CMD_WRITE_ARRAY, 0,
+      cArrayWrite                                                                                                                                                                                                 },
     // keep last entry zero's!
-    { 0,               0,                      0                                  }
+    { 0,               0,
+      0                                                                                                                                                                                                           }
 };
 
 // ! Byte swap unsigned int
@@ -70,7 +77,8 @@ uint32_t swap_uint32(uint32_t val) {
 //  of this file to check the command and to call the corresponding function
 //  Gowin commands are not handled here.
 // ------------------------------------------------------------------------------
-void Run_CommHandler(u8 * Rxdata, u16 MsgLength) {
+void Run_CommHandler(u8 * Rxdata,
+                     u16 MsgLength) {
     u8 i = 0;
     bool found = false;
 
@@ -79,7 +87,8 @@ void Run_CommHandler(u8 * Rxdata, u16 MsgLength) {
         if (Command[i].cmd == *(Rxdata + PROTOCOL_RX_OFFSET_CMD)) { // compare byte in table with rx
             if ((Command[i].byMsgLength) &&        // need to check??
                 (Command[i].byMsgLength != (MsgLength))) { // check if MsgLength is valid
-                LOG_DEBUG("Run_CommHandler- MsgLength fault %d<>%d", Command[i].byMsgLength, MsgLength);
+                LOG_DEBUG("Run_CommHandler- MsgLength fault %d<>%d", Command[i].byMsgLength,
+                          MsgLength);
                 *(Rxdata + PROTOCOL_RX_OFFSET_ADR) = COMM_NACK_MSG_LENGTH;
                 found = false;
                 break;
@@ -213,9 +222,9 @@ void c4ByteRead(u8 * RxBuf,
     u8 Identifier = RxBuf[PROTOCOL_RX_OFFSET_ADR];
 
     switch (Identifier) {
-        case 0 ... 7: // Partition info - start address
+        case 0 ... 7: // Partition info - start address (4 registers * 2)
             memcpy(&value,
-                   IdentifierInternalAddress[PartitionInfo] + RxBuf[PROTOCOL_RX_OFFSET_ADR] * 4,
+                   IdentifierInternalAddress[PartitionInfo] + Identifier * 4,
                    SIZE);
             break;
 
@@ -230,6 +239,12 @@ void c4ByteRead(u8 * RxBuf,
 
         case 0x10: // Panel backlight current
             value = Main.DeviceState.PanelCurrent;
+            break;
+
+        case 0x20 ... 0x2B: // GowinPartition info - start address ( 6 registers * 2)
+            memcpy(&value,
+                   IdentifierInternalAddress[GowinPartitionInfo] + (Identifier - 0x20) * 4,
+                   SIZE);
             break;
 
         case 0xAA:
@@ -257,7 +272,8 @@ void c4ByteRead(u8 * RxBuf,
 // byteWritebyId
 // Also used for i2c-slave-communication
 // ------------------------------------------------------------------------------
-bool byteWritebyId(u8 Identifier, u8 data) {
+bool byteWritebyId(u8 Identifier,
+                   u8 data) {
     switch (Identifier) {
         case 0x03: // test register
             LOG_DEBUG("Write Identifier %d,val:%X", Identifier, data);
@@ -318,7 +334,8 @@ bool byteWritebyId(u8 Identifier, u8 data) {
  * All SPI Flash access commands are channeled through here
  * Called from i2c_slave
  */
-u16 byteWrite2SPI(u8 * data, u16 size) {
+u16 byteWrite2SPI(u8 * data,
+                  u16 size) {
     static u16 remainingbytes = 0;
     static u8 _prevCmd = SPI_NO_CMD;
     static u8 _AddressBuf[4] = { SPI_NO_CMD, 0, 0, 0 };

@@ -22,7 +22,8 @@ uint32_t _comm_get_crc(uint8_t * data) {
 /* _comm_send_generic_cmd
  *       Created for passing the comm_proto_cmd_t-typedef
  */
-int _comm_send_generic_cmd(struct comm_driver_t * cdriver, comm_proto_cmd_t cmd) {
+int _comm_send_generic_cmd(struct comm_driver_t * cdriver,
+                           comm_proto_cmd_t cmd) {
     uint8_t out_buffer[COMMP_CMD_PACKET_SIZE];
 
     out_buffer[COMMP_OPCODE_ZERO_BYTE] = 0;
@@ -39,7 +40,8 @@ int _comm_send_generic_cmd(struct comm_driver_t * cdriver, comm_proto_cmd_t cmd)
     return error;
 }
 
-int _comm_send_crc(struct comm_driver_t * cdriver, uint32_t crc) {
+int _comm_send_crc(struct comm_driver_t * cdriver,
+                   uint32_t crc) {
     uint8_t out_buffer[COMMP_CMD_CRC_PACKET_SIZE];
 
     out_buffer[COMMP_OPCODE_ZERO_BYTE] = 0;
@@ -65,7 +67,8 @@ int _comm_send_crc(struct comm_driver_t * cdriver, uint32_t crc) {
     return error;
 }
 
-int _comm_send_end(struct comm_driver_t * cdriver, uint8_t romnr) {
+int _comm_send_end(struct comm_driver_t * cdriver,
+                   uint8_t romnr) {
     uint8_t out_buffer[COMMP_CMD_END_PACKET_SIZE];
 
     out_buffer[COMMP_OPCODE_ZERO_BYTE] = 0;
@@ -84,3 +87,34 @@ int _comm_send_end(struct comm_driver_t * cdriver, uint8_t romnr) {
     return error;
 }
 
+/* _comm_send_application_cmd
+ *    Created for reading back 4byte info from APPLICATION (not available over i2c)
+ *    Flash_tool acces only for use before starting maincpu's application soft!
+ */
+int _comm_send_application_cmd(struct comm_driver_t * cdriver,
+                               comm_proto_cmd_t cmd, uint8_t offset ) {
+    uint8_t out_buffer[COMMP_CMD_PACKET_SIZE];
+
+    // # gpmcu [Partition_info_0_crc] tx = fe 10 14 03 27 ff
+    // # gpmcu [Partition_info_0_crc] rx = fe 10 14 83 a9 31 9a 1b ff
+    // # gpmcu [Partition_info_1_crc] tx = fe 10 14 07 2b ff
+    // # gpmcu [Partition_info_1_crc] rx = fe 10 14 4a 47 4d f1 f3 ff
+
+    int packet_size = 0;
+
+    // Careful ...Not taking escape sequence into account!
+    out_buffer[packet_size++] = 0xfe;  // start
+    out_buffer[packet_size++] = 0x10;  // address
+    out_buffer[packet_size++] = 0x14;  // 4 byte cmd read
+    out_buffer[packet_size++] = offset; // 3th byte
+    //  4th byte : crc
+    out_buffer[packet_size++] = (uint8_t)(out_buffer[1] + out_buffer[2] + out_buffer[3]);
+    out_buffer[packet_size++] = 0xff; // end
+
+    int error = comm_protocol_write_data(cdriver, out_buffer, packet_size);
+    if (!error) {
+        LOG_ERROR("Send of Application cmd [%d 0x%x - %s] Failed", cmd, offset,
+                  comm_protocol_cmd_to_string(cmd));
+    }
+    return error;
+}

@@ -2,6 +2,7 @@
 #define _DATA_MAP_H_
 
 #include "bootloader.h"
+#include "bootloader_spi.h"
 
 #define READ                0x00u
 #define WRITE               0x01u
@@ -92,6 +93,7 @@ typedef struct __attribute__((packed)) { // pack to 1-byte structure!
 
 /* MainMcuRegisterStructure definition */
 struct bootloader_ctxt_t; // type defined in bootloader.h
+struct spi_ctxt_c; // type defined in bootloader_spi.h
 typedef struct {
     Debug_t Debug __attribute__((aligned));
     VersionInfo_t VersionInfo __attribute__((aligned));
@@ -99,10 +101,11 @@ typedef struct {
     DeviceState_t DeviceState __attribute__((aligned));
     Diagnostics_t Diagnostics __attribute__((aligned));
     bootloader_ctxt_t PartitionInfo __attribute__((aligned));
+    spi_ctxt_t GowinPartitionInfo __attribute__((aligned));
     Edid_t Edid __attribute__((aligned));
     Dpcd_t Dpcd __attribute__((aligned));
     log_mem_ctxt_t sramLogData __attribute__((aligned));
-}MainMcuRegisterStructure_t;
+} MainMcuRegisterStructure_t;
 
 /* Address identifier definition */
 typedef enum AddressIdentifier {
@@ -112,6 +115,7 @@ typedef enum AddressIdentifier {
     Diagnostics,
     // As from here we add our own custom identifiers
     PartitionInfo,
+    GowinPartitionInfo,
     Edid,
     Dpcd,
     DebugLog, // SharedRam with boot-code
@@ -127,8 +131,12 @@ extern const u32 IdentifierMaxLength[];
 
 // Forward declarations of bootloader_helpers.c
 struct storage_driver_t;
-extern int  _bootloader_retrieve_ctxt(struct bootloader_ctxt_t * bctxt, struct storage_driver_t * sdriver);
-extern int  _bootloader_store_ctxt(struct bootloader_ctxt_t * bctxt, struct storage_driver_t * sdriver);
+extern int  _bootloader_retrieve_ctxt(struct bootloader_ctxt_t * bctxt,
+                                      struct
+                                      storage_driver_t * sdriver);
+extern int  _bootloader_store_ctxt(struct bootloader_ctxt_t * bctxt,
+                                   struct
+                                   storage_driver_t * sdriver);
 extern void _bootloader_swap_partitions(struct bootloader_ctxt_t * bctxt);
 
 /**
@@ -138,7 +146,9 @@ extern void _bootloader_swap_partitions(struct bootloader_ctxt_t * bctxt);
  */
 extern void initialize_global_data_map();
 extern app_partition_t switch_boot_partition();
-extern void store_edid_data(u8 index, u8 * data);
-extern void store_dpcd_data(u8 index, u8 * data);
+extern void store_edid_data(u8 index,
+                            u8 * data);
+extern void store_dpcd_data(u8 index,
+                            u8 * data);
 
 #endif /* _DATA_MAP_H_ */

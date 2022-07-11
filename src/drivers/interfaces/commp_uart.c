@@ -20,7 +20,8 @@ struct uart_comm_ctxt_t {
  *
  * @returns Returns an error
  */
-status_t USART_ReadBlockingUntilEndXfer(USART_Type * base, uint8_t * data,
+status_t USART_ReadBlockingUntilEndXfer(USART_Type * base,
+                                        uint8_t * data,
                                         size_t * length) {
     uint8_t xferStarted = 0;
     uint32_t statusFlag;
@@ -95,7 +96,9 @@ static int _comm_uart_init(void * drv) {
     return 0;
 }
 
-static int _comm_uart_write(void * drv, uint8_t * buffer, size_t len) {
+static int _comm_uart_write(void * drv,
+                            uint8_t * buffer,
+                            size_t len) {
     assert(!(NULL == drv || NULL == buffer));
 
     struct comm_driver_t * driver = (struct comm_driver_t *)drv;
@@ -117,7 +120,9 @@ static int _comm_uart_write(void * drv, uint8_t * buffer, size_t len) {
     return (int)len;
 }
 
-static int _comm_uart_read(void * drv, uint8_t * buffer, size_t * len) {
+static int _comm_uart_read(void * drv,
+                           uint8_t * buffer,
+                           size_t * len) {
     assert(!(NULL == drv || NULL == buffer || NULL == len));
 
     struct comm_driver_t * driver = (struct comm_driver_t *)drv;

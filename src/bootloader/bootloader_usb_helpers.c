@@ -29,6 +29,9 @@ static int upstream_cable_usb0 = 0;
 static int upstream_cable_usb1 = 0;
 #endif
 
+#define FSL_FEATURE_I2C_TIMEOUT_RECOVERY 1U
+#define I2C_RETRY_TIMES                  3U /* Define to zero means keep waiting until the flag is assert/deassert. */
+
 // Zeus
 
 int _initialize_usb_zeus(void) {
@@ -41,8 +44,9 @@ int _initialize_usb_zeus(void) {
     usb5807c_init_ctxt(BOARD_I2C_USB_PERIPHERAL, &i2cmh);
 
     LOG_INFO("USB5807C Setting ResetN");
+    BOARD_Set_USB_Reset(0);
+    SDK_DelayAtLeastUs(100000, 96000000U);
     BOARD_Set_USB_Reset(1);
-
     SDK_DelayAtLeastUs(500000, 96000000U);
 
     if (usb5807c_enable_runtime_with_smbus() < 0) {
@@ -74,30 +78,38 @@ int _initialize_usb_zeus(void) {
 
 // Gaia
 
-int _initialize_usb0_gaia(void) {
+int _initialize_usb0_gaia(bool initialize_i2c) {
 #ifdef BOARD_GAIA
     i2c_master_handle_t i2cmh;
 
-    I2C_MasterTransferCreateHandle(BOARD_I2C_USB_PERIPHERAL, &i2cmh, NULL, NULL);
+    BOARD_Set_USB_Reset(1); // reset
+    SDK_DelayAtLeastUs(50000, 96000000U);
+
+    if (initialize_i2c)
+        BOARD_AppInitI2CMASTERPeripherals();
 
     usb7206c_init_ctxt(BOARD_I2C_USB_PERIPHERAL, &i2cmh, USB7206C_I2C_ADDR);
 
     LOG_INFO("USB7206C Release USBHUB0 ResetN");
     BOARD_Set_USB_Reset(0); // release reset
-
     SDK_DelayAtLeastUs(100000, 96000000U);
 
+    uint8_t timeout = 6;
     uint32_t revision = usb7206c_retrieve_revision();
-
-    if (revision != (uint32_t)-1) {
-        LOG_INFO("USB0 Revision: 0x%X , ID: 0x%X, VID: 0x%.4X",
-                 revision,
-                 usb7206c_retrieve_id(),
-                 usb7206c_retrieve_usb_vid());
-    } else {
-        LOG_ERROR("USB0 Revision: 0x%X", revision);
-        return -1;
+    while (revision == (uint32_t)-1) {
+        LOG_WARN("USB0 - waiting for hub to answer");
+        revision = usb7206c_retrieve_revision();
+        SDK_DelayAtLeastUs(500000, 96000000U);
+        if (timeout-- == 0) {
+            LOG_ERROR("USB0 - timeout");
+            return -1;
+        }
     }
+
+    LOG_INFO("USB0 Revision: 0x%.8X , ID: 0x%.4X, VID: 0x%.4X",
+             revision,
+             usb7206c_retrieve_id(),
+             usb7206c_retrieve_usb_vid());
 
     usb7206c_set_i2s_audio_disabled(); // prevent AUDIO detection
 
@@ -118,30 +130,38 @@ int _initialize_usb0_gaia(void) {
     return 0;
 }
 
-int _initialize_usb1_gaia(void) {
+int _initialize_usb1_gaia(bool initialize_i2c) {
 #ifdef BOARD_GAIA
     i2c_master_handle_t i2cmh;
 
-    I2C_MasterTransferCreateHandle(BOARD_I2C_USB_PERIPHERAL, &i2cmh, NULL, NULL);
+    BOARD_Set_USB1_Reset(1); // reset
+    SDK_DelayAtLeastUs(50000, 96000000U);
+
+    if (initialize_i2c)
+        BOARD_AppInitI2CMASTERPeripherals();
 
     usb7206c_init_ctxt(BOARD_I2C_USB_PERIPHERAL, &i2cmh, USB7206C_I2C_ADDR);
 
     LOG_INFO("USB7206C Release USBHUB1 ResetN");
     BOARD_Set_USB1_Reset(0); // release reset
-
     SDK_DelayAtLeastUs(100000, 96000000U);
 
     uint32_t revision = usb7206c_retrieve_revision();
-
-    if (revision != (uint32_t)-1) {
-        LOG_INFO("USB1 Revision: 0x%.4X , ID: 0x%.4X, VID: 0x%.4X",
-                 revision,
-                 usb7206c_retrieve_id(),
-                 usb7206c_retrieve_usb_vid());
-    } else {
-        LOG_ERROR("USB1 Revision: 0x%X", revision);
-        return -1;
+    uint8_t timeout = 6;
+    while (revision == (uint32_t)-1) {
+        LOG_WARN("USB1 - waiting for hub to answer");
+        revision = usb7206c_retrieve_revision();
+        SDK_DelayAtLeastUs(500000, 96000000U);
+        if (timeout-- == 0) {
+            LOG_ERROR("USB1 - timeout");
+            return -1;
+        }
     }
+
+    LOG_INFO("USB1 Revision: 0x%.8X , ID: 0x%.4X, VID: 0x%.4X",
+             revision,
+             usb7206c_retrieve_id(),
+             usb7206c_retrieve_usb_vid());
 
     usb7206c_set_i2s_audio_disabled();
 

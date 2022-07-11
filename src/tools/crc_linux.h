@@ -31,6 +31,8 @@ uint32_t calculate_bin_crc(const char * file);
  *
  * @note: Code from: https://rosettacode.org/wiki/CRC-32#C
  */
-uint32_t _crc32(uint32_t crc, const char * buf, size_t len);
+uint32_t _crc32(uint32_t crc,
+                const char * buf,
+                size_t len);
 
 #endif /* _TOOLS_CRC_H_ */

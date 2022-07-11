@@ -18,9 +18,18 @@
 #include "version.h"
 #include "memory_map.h"
 
-int _bootloader_verify_bootinfo_crc(struct bootloader_ctxt_t * bctxt, int silent) {
-    uint32_t crc = crc_run_crc32((uint8_t *)bctxt, (sizeof(struct bootloader_ctxt_t)
-                                                    - sizeof(bctxt->crc) - sizeof(bctxt->part)));
+/*
+ * _bootloader_crc_bytes2check()
+ * We don't use own data bytes to calculate the crc, only application data
+ * Upon writing the own crc we can't take these bytes into account! :)
+ */
+size_t _bootloader_crc_bytes2check(struct bootloader_ctxt_t * bctxt) {
+    return (sizeof(struct bootloader_ctxt_t) - sizeof(bctxt->crc) - sizeof(bctxt->part));
+}
+
+int _bootloader_verify_bootinfo_crc(struct bootloader_ctxt_t * bctxt,
+                                    int silent) {
+    uint32_t crc = crc_run_crc32((uint32_t)bctxt, _bootloader_crc_bytes2check(bctxt));
 
     if (silent)
         return (crc == bctxt->crc);
@@ -83,12 +92,26 @@ int _bootloader_retrieve_ctxt(struct bootloader_ctxt_t * bctxt,
     }
 
     LOG_INFO("Retrieving bootloader_ctxt_t from flash");
-    int error = storage_read_data(sdriver, (uint8_t *)bctxt, sizeof(struct
-                                                                    bootloader_ctxt_t));
+    int error = storage_read_data(sdriver,
+                                  (uint8_t *)bctxt,
+                                  sizeof(struct bootloader_ctxt_t));
+
     if (error < 0) {
         LOG_ERROR("Failed to retrieve bootloader info from flash");
         return error;
     }
+
+    struct flash_area_t * farea = STORAGE_GETPRIV(sdriver);
+    // farea->size Would fail because the entire region is not written
+    // uint32_t crc = crc_run_crc32(farea->start_addr, farea->size);
+    uint32_t crc = crc_run_crc32(farea->start_addr, _bootloader_crc_bytes2check(bctxt));
+    if (crc == bctxt->crc) {
+        LOG_OK("bootloader context crc validated");
+    } else {
+        LOG_ERROR("Bootloader context crc NOK (%X <> %X)", crc, bctxt->crc);
+        return -1;
+    }
+
     return error;
 }
 
@@ -105,30 +128,25 @@ bool _bootloader_ctxt_equal(struct bootloader_ctxt_t * b1,
             return false;
         }
     }
-/*
- *              //<! We only compare partition data
- *              if (!memcmp(b1, b2, sizeof(struct app_ctxt_t) * BTLR_NR_APPS))
- *              {
- *                      return true;
- *              }
- */
     return true;
 }
 
 int _bootloader_ctxt_validate_partition(struct bootloader_ctxt_t * bctxt,
                                         app_partition_t partition) {
-    LOG_INFO("Validating partition %d", partition);
+    LOG_INFO("Validating partition %d @(0x%.8X)", partition,
+             bctxt->apps[partition].start_addr);
     if (bctxt->apps[partition].crc == BOOTLOADER_MAGIC_CRC) {
         LOG_DEBUG("Empty partition");
         return 0;
     }
+
     uint32_t crc = crc_run_crc32(
-        (uint8_t *)bctxt->apps[partition].start_addr,
+        bctxt->apps[partition].start_addr,
         bctxt->apps[partition].partition_size);
     if (crc == 0) {     // retry
         LOG_WARN("Got CRC=0, retry reading");
         crc = crc_run_crc32(
-            (uint8_t *)bctxt->apps[partition].start_addr,
+            bctxt->apps[partition].start_addr,
             bctxt->apps[partition].partition_size);
     }
     if (crc == bctxt->apps[partition].crc) {
@@ -144,21 +162,21 @@ uint32_t _bootloader_ctxt_get_crc_partition(struct bootloader_ctxt_t * bctxt,
               partition,
               bctxt->apps[partition].start_addr, bctxt->apps[partition].application_size);
     uint32_t crc = crc_run_crc32(
-        (uint8_t *)bctxt->apps[partition].start_addr,
+        bctxt->apps[partition].start_addr,
         bctxt->apps[partition].partition_size);
     LOG_INFO("crc partition [%d] = %X", partition, crc);
     return crc;
 }
 
-int _bootloader_store_ctxt(struct bootloader_ctxt_t * bctxt, struct
+int _bootloader_store_ctxt(struct bootloader_ctxt_t * bctxt,
+                           struct
                            storage_driver_t * sdriver) {
     struct flash_area_t * farea = STORAGE_GETPRIV(sdriver);
 
     farea->offset = 0;
     storage_erase_storage(sdriver);
 
-    bctxt->crc = crc_run_crc32((uint8_t *)bctxt, (sizeof(struct
-                                                         bootloader_ctxt_t) - sizeof(bctxt->crc) - sizeof(bctxt->part)));
+    bctxt->crc = crc_run_crc32((uint32_t)bctxt, _bootloader_crc_bytes2check(bctxt));
     LOG_DEBUG("Bootloader CRC: %x", bctxt->crc);
     LOG_DEBUG("Application CRC: 0[%x] 1[%x]", bctxt->apps[0].crc, bctxt->apps[1].crc);
     LOG_DEBUG("Sizeof bootloader ctxt: %d", sizeof(struct bootloader_ctxt_t));
@@ -194,7 +212,8 @@ int _bootloader_store_ctxt(struct bootloader_ctxt_t * bctxt, struct
     return error;
 }
 
-int _bootloader_initialize_ctxt(struct bootloader_ctxt_t * bctxt, struct
+int _bootloader_initialize_ctxt(struct bootloader_ctxt_t * bctxt,
+                                struct
                                 storage_driver_t * sdriver) {
     LOG_INFO("Creating new bootloader context (%d bytes)", sizeof(struct bootloader_ctxt_t));
     memset(bctxt, 0, sizeof(struct bootloader_ctxt_t));
@@ -220,7 +239,8 @@ void _bootloader_swap_partitions(struct bootloader_ctxt_t * bctxt) {
     }
 }
 
-int _bootloader_send_bootinfo(struct bootloader_ctxt_t * bctxt, struct comm_driver_t * cdriver) {
+int _bootloader_send_bootinfo(struct bootloader_ctxt_t * bctxt,
+                              struct comm_driver_t * cdriver) {
     uint8_t out_buffer[COMMP_CMD_PACKET_SIZE + sizeof(struct bootloader_ctxt_t)] = { 0 };
 
     memset(out_buffer, 0, sizeof(out_buffer));
@@ -232,4 +252,33 @@ int _bootloader_send_bootinfo(struct bootloader_ctxt_t * bctxt, struct comm_driv
     out_buffer[COMMP_CMD_CMDCODE_LSB] = COMMP_CMD_BOOTINFO;
 
     return comm_protocol_write_data(cdriver, out_buffer, sizeof(out_buffer));
+}
+
+int _bootloader_send_versioninfo(const char * version,
+                                 const char * git_version,
+                                 struct comm_driver_t * cdriver) {
+
+    uint8_t out_buffer[256] = { 0 };
+
+    if ((COMMP_CMD_PACKET_SIZE + strlen(version) + strlen(git_version)) > 256) {
+        return -1;
+    }
+
+    memset(out_buffer, 0, sizeof(out_buffer));
+    memcpy(&out_buffer[COMMP_CMD_PACKET_SIZE], version, strlen(version));
+    size_t size = COMMP_CMD_PACKET_SIZE + strlen(version);
+    char seperator[] = COMMP_CMD_VERSION_SEPERATOR;
+    out_buffer[size++] = (uint8_t)seperator[0];
+    memcpy(&out_buffer[size], git_version, strlen(git_version));
+    size += strlen(git_version);
+    // was already zero filled, no need to add
+
+    out_buffer[COMMP_OPCODE_ZERO_BYTE] = 0x00;
+    out_buffer[COMMP_OPCODE_BYTE] = COMMP_CMD;
+    out_buffer[COMMP_CMD_CMDCODE_MSB] = 0;
+    out_buffer[COMMP_CMD_CMDCODE_LSB] = COMMP_CMD_VERINFO;
+
+    LOG_WARN("Sending versioninfo length %d", size);
+
+    return comm_protocol_write_data(cdriver, out_buffer, size + 1);
 }

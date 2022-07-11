@@ -38,7 +38,8 @@ struct tmds181_ctxt_t _ctxt = {
  * @return -1 if failed, otherwise 0
  */
 static int __attribute__((unused)) _tmds181_i2c_write(uint16_t reg,
-                                                      uint8_t * data, uint16_t
+                                                      uint8_t * data,
+                                                      uint16_t
                                                       count) {
     assert(_ctxt.i2c_base);
     assert(_ctxt.i2c_handle);
@@ -69,7 +70,9 @@ static int __attribute__((unused)) _tmds181_i2c_write(uint16_t reg,
  *
  * @return -1 if failed, otherwise 0
  */
-static int _tmds181_i2c_read(uint16_t reg, uint8_t * data, uint8_t count) {
+static int _tmds181_i2c_read(uint16_t reg,
+                             uint8_t * data,
+                             uint8_t count) {
     assert(_ctxt.i2c_base);
     assert(_ctxt.i2c_handle);
 
@@ -91,7 +94,8 @@ static int _tmds181_i2c_read(uint16_t reg, uint8_t * data, uint8_t count) {
     return 0;
 }
 
-void tmds181_init_ctxt(I2C_Type * base, i2c_master_handle_t * handle) {
+void tmds181_init_ctxt(I2C_Type * base,
+                       i2c_master_handle_t * handle) {
     assert(base);
     assert(handle);
 

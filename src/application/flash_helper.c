@@ -33,7 +33,8 @@ struct bootloader_ctxt_t bctxt;
  *         For calculation we use the entire flash area and not the size.
  * @returns  bool succes/failure
  */
-bool fix_partition(app_partition_t partition, uint32_t size) {
+bool fix_partition(app_partition_t partition,
+                   uint32_t size) {
     bctxt.apps[partition].application_size = size;
     bctxt.apps[partition].crc = _bootloader_ctxt_get_crc_partition(&bctxt, partition);
     if (bctxt.apps[partition].crc != 0) {

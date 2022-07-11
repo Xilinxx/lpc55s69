@@ -11,6 +11,8 @@
 #include "memory_map.h"
 #include "lpc55s69_irqs.h"
 
+#define __maybe_unused __attribute__((unused))
+
 extern int main(void);
 extern void _vStackTop(void);
 
@@ -21,7 +23,7 @@ void ResetISR(void) {
     /* Relocate the Vector Table */
     uint32_t * vector_table = (uint32_t *)&_stext;
     uint32_t * vtor = (uint32_t *)VTOR;
-    uint32_t oldvtor = *vtor;     // !< Store old vtor for bootloader
+    __maybe_unused uint32_t oldvtor = *vtor;     // !< Store old vtor for bootloader
 
     *vtor = ((uint32_t)vector_table & 0xFFFFFFF8);
 
@@ -45,7 +47,7 @@ void ResetISR(void) {
     /* Enable IRQ's */
     __asm volatile ("cpsie i");
 
-    int val = main();
+    __maybe_unused int val = main();
 
 #ifndef IS_APPLICATION
     /* main() shouldn't return, but if it does,

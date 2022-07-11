@@ -6,12 +6,14 @@
  * @version v0.1
  * @date 2022-06-10
  */
+#include <stdbool.h>
 
 #define USB7206C_USBHUB1_NEW_I2C_ADDR USB7206C_I2C_ADDR + 1   // !< I2C Address for USB7206C hub
 
 /**
  * @brief  _initialize_usb_zeus
  *          usb initialisation for zeus
+ *          Mode: i2c Master (not for application, but needed for init of usb)
  *
  * @returns -1 if failure
  */
@@ -20,11 +22,11 @@ int _initialize_usb_zeus(void);
 /**
  * @brief  _initialize_usb0_gaia
  *          usb initialisation for gaia USBHUB0
- *          This hub needs to be iniitalized last. Orginal address remains!
+ *          This hub needs to be initialized last. Orginal address remains!
  *
  * @returns -1 if failure
  */
-int _initialize_usb0_gaia(void);
+int _initialize_usb0_gaia(bool initialize_i2c);
 
 /**
  * @brief  _initialize_usb1_gaia
@@ -33,7 +35,7 @@ int _initialize_usb0_gaia(void);
  *
  * @returns -1 if failure
  */
-int _initialize_usb1_gaia(void);
+int _initialize_usb1_gaia(bool initialize_i2c);
 
 /**
  * @brief  _detect_cable_change_gaia

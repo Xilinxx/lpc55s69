@@ -76,8 +76,10 @@ void spi_master_disable();
  */
 void spi_master_update();
 
-void spi_read_page(u16 startpage, bool print);
-EXTERN void spi_queue_msg_param(u8 * param, u16 size);
+void spi_read_page(u16 startpage,
+                   bool print);
+EXTERN void spi_queue_msg_param(u8 * param,
+                                u16 size);
 EXTERN void spi_queue_msg(t_spi_command cmd);
 void spi_queue_process();
 u8 spi_queue_size(bool verbose);

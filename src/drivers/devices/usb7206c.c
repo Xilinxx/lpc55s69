@@ -42,7 +42,9 @@ struct usb7206c_ctxt_t _usb7206c_ctxt = {
 };
 
 
-void usb7206c_init_ctxt(I2C_Type * base, i2c_master_handle_t * handle, uint8_t i2c_address) {
+void usb7206c_init_ctxt(I2C_Type * base,
+                        i2c_master_handle_t * handle,
+                        uint8_t i2c_address) {
     assert(base);
     assert(handle);
     _usb7206c_ctxt.i2c_base = base;
@@ -50,7 +52,8 @@ void usb7206c_init_ctxt(I2C_Type * base, i2c_master_handle_t * handle, uint8_t i
     _usb7206c_ctxt.i2c_transfer.slaveAddress = i2c_address;
 }
 
-static void _usb7206c_i2c_print_error_status(status_t status, uint32_t reg) {
+static void _usb7206c_i2c_print_error_status(status_t status,
+                                             uint32_t reg) {
     switch (status) {
         case kStatus_I2C_Busy:
             LOG_ERROR("Previous transmission still not finished.");
@@ -173,7 +176,8 @@ static void _usb7206c_i2c_print_error_status(status_t status, uint32_t reg) {
  *
  * @returns -1 if failed, otherwise 0
  */
-static int _usb7206c_write_config_reg(uint32_t reg, uint8_t * value,
+static int _usb7206c_write_config_reg(uint32_t reg,
+                                      uint8_t * value,
                                       uint8_t count) {
     assert(_usb7206c_ctxt.i2c_base);
     assert(_usb7206c_ctxt.i2c_handle);
@@ -250,7 +254,9 @@ static int _usb7206c_write_config_reg(uint32_t reg, uint8_t * value,
  *
  * @returns -1 if failed, otherwise 0
  */
-static int _usb7206c_read_config_reg(uint32_t reg, void * data, uint8_t count) {
+static int _usb7206c_read_config_reg(uint32_t reg,
+                                     void * data,
+                                     uint8_t count) {
 
     uint8_t register_read[9] = {
         0x00,                  // Buffer address MSB: always 0
@@ -458,11 +464,15 @@ uint32_t usb7206c_retrieve_configuration() {
     return data;
 }
 
-int usb7206c_set_generic_register(uint32_t reg, uint8_t * value, uint8_t count) {
+int usb7206c_set_generic_register(uint32_t reg,
+                                  uint8_t * value,
+                                  uint8_t count) {
     return _usb7206c_write_config_reg(reg, value, count);
 }
 
-int usb7206c_get_generic_register(uint32_t reg, uint8_t * value, uint8_t count) {
+int usb7206c_get_generic_register(uint32_t reg,
+                                  uint8_t * value,
+                                  uint8_t count) {
     int ret = _usb7206c_read_config_reg(reg, _usb_7206_i2c_rx_buf, count);
 
     if ( ret < 0)

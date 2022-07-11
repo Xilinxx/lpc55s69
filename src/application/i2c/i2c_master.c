@@ -76,8 +76,8 @@ uint8_t g_accel_addr_found = 0x00;
  * @returns -1 on failure
  ******************************************************************************/
 int i2c_master_initialize_usb(void) {
-    if (strcmp(BOARD_GetName(), "Zeus300s") == 0) {
-
+    BOARD_AppInitI2CMASTERPeripherals();
+    if (strcmp(BOARD_GetName(), "Zeus300S") == 0) {
         LOG_INFO("Zeus300s USB Hub initialisation");
 #ifdef BOARD_ZEUS
         _initialize_usb_zeus();
@@ -85,10 +85,11 @@ int i2c_master_initialize_usb(void) {
     } else if (strcmp(BOARD_GetName(), "Gaia300D") == 0) {
         LOG_INFO("Gaia300D USB Hub initialisation");
 #ifdef BOARD_GAIA
-        _initialize_usb1_gaia();
-        _initialize_usb0_gaia();
+        _initialize_usb1_gaia(false);
+        _initialize_usb0_gaia(false);
 #endif
     }
+    BOARD_AppDeInitI2CMASTERPeripherals();
     return 0;
 }
 
@@ -212,7 +213,8 @@ void i2c_master_init() {
     I2C_MasterInit(FLEXCOMM_I2C_USB_MASTER, &masterConfig, I2C_MASTER_CLOCK_FREQUENCY);
 
     /* Create the I2C handle for the non-blocking transfer */
-    I2C_MasterTransferCreateHandle(FLEXCOMM_I2C_MAINCPU_MASTER, &g_m_handle, i2c_master_callback, NULL);
+    I2C_MasterTransferCreateHandle(FLEXCOMM_I2C_MAINCPU_MASTER, &g_m_handle, i2c_master_callback,
+                                   NULL);
     I2C_MasterTransferCreateHandle(FLEXCOMM_I2C_USB_MASTER, &g_m_handle, i2c_master_callback, NULL);
 
     return;

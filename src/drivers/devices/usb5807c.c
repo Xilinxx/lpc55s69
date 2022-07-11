@@ -35,7 +35,8 @@ struct usb5807c_ctxt_t _usb_ctxt = {
     .curr_port_status   = 0xff,
 };
 
-void usb5807c_init_ctxt(I2C_Type * base, i2c_master_handle_t * handle) {
+void usb5807c_init_ctxt(I2C_Type * base,
+                        i2c_master_handle_t * handle) {
     assert(base);
     assert(handle);
     _usb_ctxt.i2c_base = base;
@@ -51,7 +52,9 @@ void usb5807c_init_ctxt(I2C_Type * base, i2c_master_handle_t * handle) {
  *
  * @return -1 if failed, otherwise 0
  */
-static int _usb5807c_i2c_write(uint16_t reg, uint8_t * data, uint16_t count) {
+static int _usb5807c_i2c_write(uint16_t reg,
+                               uint8_t * data,
+                               uint16_t count) {
     assert(_usb_ctxt.i2c_base);
     assert(_usb_ctxt.i2c_handle);
 
@@ -99,7 +102,9 @@ static int _usb5807c_i2c_write(uint16_t reg, uint8_t * data, uint16_t count) {
  *
  * @return -1 if failed, otherwise 0
  */
-static int _usb5807c_i2c_read(uint16_t reg, uint8_t * data, uint8_t count) {
+static int _usb5807c_i2c_read(uint16_t reg,
+                              uint8_t * data,
+                              uint8_t count) {
     assert(_usb_ctxt.i2c_base);
     assert(_usb_ctxt.i2c_handle);
 
@@ -155,7 +160,8 @@ static int _usb5807c_i2c_read(uint16_t reg, uint8_t * data, uint8_t count) {
  *
  * @returns -1 if failed, otherwise 0
  */
-static int _usb5807c_write_config_reg(uint16_t reg, uint8_t * value,
+static int _usb5807c_write_config_reg(uint16_t reg,
+                                      uint8_t * value,
                                       uint8_t count) {
     assert(_usb_ctxt.i2c_base);
     assert(_usb_ctxt.i2c_handle);
@@ -219,7 +225,9 @@ static int _usb5807c_write_config_reg(uint16_t reg, uint8_t * value,
  *
  * @returns -1 if failed, otherwise 0
  */
-static int _usb5807c_read_config_reg(uint16_t reg, void * data, uint8_t count) {
+static int _usb5807c_read_config_reg(uint16_t reg,
+                                     void * data,
+                                     uint8_t count) {
     /* Setup data buffer for memory transfer */
     _usb_i2c_tx_buf[USB5807C_REG_CONF_CL] = USB5807C_READ_CONF_REG_LEN;
     _usb_i2c_tx_buf[USB5807C_REG_CONF_RW] = USB5807C_READ_CMD;

@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <arpa/inet.h>
 
+#include "version.h" // git version
 #include "bootloader.h"
 #include "bootloader_spi.h"
 #include "comm_driver.h"
@@ -28,7 +29,7 @@
 #define I2C_DEVICE         "/dev/i2c-5"
 #define I2C_SETGP2BOOT     "i2cset -y 5 0x60 0x30 0x01"
 #define I2C_APP_REBOOT     "i2cset -y 5 0x60 0x31 0x01"
-#define GOWIN_BITFILE_SIZE 223168
+#define GOWIN_BITFILE_SIZE 221368
 
 extern struct comm_driver_t serial_comm;
 extern struct comm_driver_t udp_comm;
@@ -38,7 +39,22 @@ struct bootloader_ctxt_t _bcontext;
 struct spi_ctxt_t _spicontext;
 
 /* interfaces/commp_cmd_helpers.c implementation */
-int _comm_send_generic_cmd(struct comm_driver_t * cdriver, comm_proto_cmd_t cmd);
+int _comm_send_generic_cmd(struct comm_driver_t * cdriver,
+                           comm_proto_cmd_t cmd);
+int _comm_send_application_cmd(struct comm_driver_t * cdriver,
+                               comm_proto_cmd_t cmd,
+                               uint8_t offset);
+
+bool _in_boot_code();
+
+void _bootloader_print_versioninfo(const char * buffer) {
+    char * copy = strdup(buffer);
+    char * version = strtok(copy, "*");
+
+    LOG_RAW("Bootloader version\t[%s]", version);
+    version = strtok(NULL, COMMP_CMD_VERSION_SEPERATOR); // Version seperator is '*'
+    LOG_RAW("Bootloader git ver\t[%s]", version);
+}
 
 void _bootloader_print_info(struct bootloader_ctxt_t * bctxt) {
     LOG_RAW("Bootloader info (struct size is %d bytes)", sizeof(struct bootloader_ctxt_t));
@@ -66,9 +82,63 @@ void _bootloader_spi_print_info(struct spi_ctxt_t * bctxt) {
         LOG_RAW("\t app size:  0x%x", bctxt->gowin[i].image_size);
         LOG_RAW("\t part size: 0x%x", bctxt->gowin[i].partition_size);
         LOG_RAW("\t crc:       0x%x", bctxt->gowin[i].crc);
-        LOG_RAW("\t file size: 0x%x - %d", bctxt->gowin[i].bitfile_size, bctxt->gowin[i].bitfile_size);
+        LOG_RAW("\t file size: 0x%x - %d", bctxt->gowin[i].bitfile_size,
+                bctxt->gowin[i].bitfile_size);
         LOG_RAW("\t file crc:  0x%x", bctxt->gowin[i].bitfile_crc);
     }
+}
+
+/* helper function for _bootloader_print_app_info
+ * return: crc
+ */
+uint32_t _bootloader_verify_uart_reply(int n,
+                                       int required,
+                                       uint8_t * data) {
+    // we expect 9 return bytes
+    if (n < required) {
+        LOG_ERROR("Did not get enough bytes for crc calculation");
+        exit(0);
+    }
+    // crc starts at 3th byte and is 4 byte long
+    return  ((uint32_t)((data[n - 6] << 24) | (data[n - 5] << 16) | (data[n - 4] << 8) | data[n -
+                                                                                              3]));
+}
+
+/* Getting the crc from both rom partitions from the application code
+ * Required for upgrade script which compares crc and we can't reboot to bootloader or USB data gets lost
+ */
+void _bootloader_print_app_info(struct comm_driver_t * drv,
+                                uint8_t * data) {
+    if (_in_boot_code()) {
+        LOG_WARN("Not possible in boot_code");
+        exit(0);
+    }
+
+    const int EXPECT_REPLY_SIZE = 9;  // 4byte data + 5 overhead
+    size_t size = COMMP_PACKET_SIZE;
+
+    _comm_send_application_cmd(drv, COMMP_CMD_INFO_APP, 0x3);  // CRC0
+    int r = comm_protocol_read_data(drv, data, &size);
+    uint32_t crc = _bootloader_verify_uart_reply(r, EXPECT_REPLY_SIZE, data);
+    LOG_RAW("approm0 crc = %.8x", crc);
+
+    _comm_send_application_cmd(drv, COMMP_CMD_INFO_APP, 0x7); // CRC1
+    r = comm_protocol_read_data(drv, data, &size);
+    crc = _bootloader_verify_uart_reply(r, EXPECT_REPLY_SIZE, data);
+    LOG_RAW("approm1 crc = %.8x", crc);
+
+    // 0x20 + offset in {start_addr = 0x0, image_size = 0x3f000, partition_size = 0x40000, crc = 0xa5c3c132, bitfile_size = 0x360b8, bitfile_crc = 0x68227395}
+    _comm_send_application_cmd(drv, COMMP_CMD_INFO_APP, 0x25); // CRC Gowin Part0
+    r = comm_protocol_read_data(drv, data, &size);
+    crc = _bootloader_verify_uart_reply(r, EXPECT_REPLY_SIZE, data);
+    LOG_RAW("gowin0 bitfile crc = %.8x", crc);
+
+    _comm_send_application_cmd(drv, COMMP_CMD_INFO_APP, 0x2b); // CRC Golden Gowin
+    r = comm_protocol_read_data(drv, data, &size);
+    crc = _bootloader_verify_uart_reply(r, EXPECT_REPLY_SIZE, data);
+    LOG_RAW("gowin1 bitfile crc = %.8x", crc);
+
+    exit(0);
 }
 
 enum dev_type_t {
@@ -99,7 +169,8 @@ struct context_t {
     bool read_back;
 };
 
-int _tty_find_params(struct serial_params_t * p, char * params) {
+int _tty_find_params(struct serial_params_t * p,
+                     char * params) {
     int len = strlen(params);
 
     if (len > MAX_PARAM_LEN) {
@@ -124,7 +195,8 @@ int _tty_find_params(struct serial_params_t * p, char * params) {
     return 0;
 }
 
-int _ip_find_params(struct ip_params_t * p, char * params) {
+int _ip_find_params(struct ip_params_t * p,
+                    char * params) {
     int len = strlen(params);
 
     if (len > MAX_PARAM_LEN) {
@@ -149,7 +221,9 @@ int _ip_find_params(struct ip_params_t * p, char * params) {
     return 0;
 }
 
-int _parse_params(struct context_t * ctxt, char * drv, char * paramstr) {
+int _parse_params(struct context_t * ctxt,
+                  char * drv,
+                  char * paramstr) {
     if (ctxt->dev_needed) {
         // Add default parameters
         if (drv[0] == '\0')
@@ -251,7 +325,8 @@ void _send_debug_handler(struct comm_driver_t * cdriver) {
     comm_protocol_write_data(cdriver, buffer, 4);
 }
 
-void _send_cmd(struct comm_driver_t * cdriver, char * cmd) {
+void _send_cmd(struct comm_driver_t * cdriver,
+               char * cmd) {
     uint8_t in_buffer[COMMP_PACKET_SIZE];
 
     if (!cdriver || !cmd) {
@@ -269,6 +344,16 @@ void _send_cmd(struct comm_driver_t * cdriver, char * cmd) {
         }
         memcpy(&_bcontext, &in_buffer[COMMP_CMD_DATA_OFFSET], sizeof(struct bootloader_ctxt_t));
         _bootloader_print_info(&_bcontext);
+    } else if (!strcmp(cmd, "version")) {
+        LOG_INFO("Requesting version info");
+        _comm_send_generic_cmd(cdriver, COMMP_CMD_VERINFO);
+        size_t size = COMMP_PACKET_SIZE;
+        int r = comm_protocol_read_data(cdriver, in_buffer, &size);
+        if (r < 0) {
+            LOG_ERROR("Failed to read bootinfo");
+            return;
+        }
+        _bootloader_print_versioninfo(&in_buffer[COMMP_CMD_DATA_OFFSET]);
     } else if (!strcmp(cmd, "boot")) {
         LOG_INFO("Forcing boot");
         _comm_send_generic_cmd(cdriver, COMMP_CMD_BOOT);
@@ -325,6 +410,8 @@ void _send_cmd(struct comm_driver_t * cdriver, char * cmd) {
         }
         memcpy(&_spicontext, &in_buffer[COMMP_CMD_DATA_OFFSET], sizeof(struct spi_ctxt_t));
         _bootloader_spi_print_info(&_spicontext);
+    } else if (!strcmp(cmd, "infoapp")) {
+        _bootloader_print_app_info(cdriver, in_buffer);
     } else {
         LOG_ERROR("Invalid command");
         return;
@@ -332,7 +419,8 @@ void _send_cmd(struct comm_driver_t * cdriver, char * cmd) {
     return;
 }
 
-void _udp_comm_set_conn(struct comm_driver_t * cdriver, struct ip_params_t * ip) {
+void _udp_comm_set_conn(struct comm_driver_t * cdriver,
+                        struct ip_params_t * ip) {
     struct conn_t * conn = socket_init_connection(ROLE_CLIENT, IPPROTO_UDP,
                                                   ip->ip, ip->port);
 
@@ -357,8 +445,10 @@ struct comm_driver_t * _select_cdriver(struct context_t * ctxt) {
     return NULL;
 }
 
-int _read_back_rom(struct context_t ctxt, struct comm_driver_t * cdriver,
-                   int rom_readsize, int gowin_partition) {
+int _read_back_rom(struct context_t ctxt,
+                   struct comm_driver_t * cdriver,
+                   int rom_readsize,
+                   int gowin_partition) {
     int err = 0;
     int packet_read_size = COMMP_DATA_SIZE;
     int packets = rom_readsize / COMMP_DATA_SIZE;
@@ -435,33 +525,41 @@ int _read_back_rom(struct context_t ctxt, struct comm_driver_t * cdriver,
 void _print_tools_help() {
     LOG_RAW("Usage: flash_tool -d <driver> <params>");
     LOG_RAW("       Commands only functional when GPmcu runs in bootloader-code!");
+    LOG_RAW("\t -v : version info");
     LOG_RAW("\t -d <ip or serial> : Select driver (default: %s)", DEFAULT_DRIVER);
     LOG_RAW("\t -p <connection params> : Connection params (default: %s)", ZEUS_GPMCU_PORT);
     LOG_RAW("\t\t ip example: flash_tool -d \"ip\" -p \"127.0.0.1:5000\"");
     LOG_RAW("\t\t serial example: flash_tool -d \"serial\" -p \"%s\"", ZEUS_GPMCU_PORT);
     LOG_RAW("\t -f <file to send> : Send binary firmware file");
     LOG_RAW(
-        "\t\t serial command example: flash_tool -d \"serial\" -p \"%s\" -f <file>", ZEUS_GPMCU_PORT);
+        "\t\t serial command example: flash_tool -d \"serial\" -p \"%s\" -f <file>",
+        ZEUS_GPMCU_PORT);
     LOG_RAW("\t -g <0,1>: Indicates binary firmware file is for Gowin(SPI flash) partition nr");
     LOG_RAW("\t -r <file to receive> : Receive binary firmware file");
     LOG_RAW("\t -b <size> : Readback size in bytes from rom content");
     LOG_RAW(
-        "\t\t spi-Flash : flash_tool -d \"serial\" -p \"%s\" -r readback.bin -b %d", ZEUS_GPMCU_PORT, GOWIN_BITFILE_SIZE);
-    LOG_RAW("\t -c <info, boot, swap, powon, powoff, reset, wdog, setrom<0,1>> : Send command");
-    LOG_RAW("\t -c <setspi<0,1>, wipespi<0,1>, infospi, gp2boot> : Send spi command");
-    LOG_RAW("\t -c <reconfigure> : Send gowin command");
+        "\t\t spi-Flash : flash_tool -d \"serial\" -p \"%s\" -r gw-readb.bin -b %d",
+        ZEUS_GPMCU_PORT, GOWIN_BITFILE_SIZE);
     LOG_RAW(
-        "\t\t serial command example: flash_tool -d \"serial\" -p \"%s\" -c \"info\"", ZEUS_GPMCU_PORT);
+        "\t -c <info, version, boot, swap, powon, powoff, reset, wdog, setrom<0,1>> : Send command");
+    LOG_RAW("\t -c <setspi<0,1>, wipespi<0,1>, infospi, > : Send spi command");
+    LOG_RAW("\t -c reconfigure : gowin reconfig command");
+    LOG_RAW("\t -c gp2boot : Application (i2c)-command to get in bootloader");
+    LOG_RAW("\t -c infoapp : Application (uart)command to get partition crc");
+    LOG_RAW(
+        "\t\t serial command example: flash_tool -d \"serial\" -p \"%s\" -c \"info\"",
+        ZEUS_GPMCU_PORT);
     LOG_RAW("\t -z : Force debug handler");
     LOG_RAW(
         "\t\t serial command example: flash_tool -d \"serial\" -p \"%s\" -z", ZEUS_GPMCU_PORT);
-    LOG_RAW("\t -t : Force crc calculation only");
-    LOG_RAW("\t\t crc example: flash_tool -t -f \"flash0.bin\"");
-    LOG_RAW("\t -s : i2c over gpmcu spi-Flash command (Application-code only)");
+    LOG_RAW("\t -t : Force crc32 calculation of a file");
+    LOG_RAW("\t\t crc example: flash_tool -t -f \"flash.bin\"");
+    LOG_RAW("\t -s : i2c over gpmcu spi-Flash command (Application-code only!)");
+    // Still functional but obselete since spi is flashed via bootloader now
+    // LOG_RAW(
+    //     "\t\t spi-Flash : flash_tool -s 0x02 -f gw-greenpower.bin -p %s",I2C_DEVICE);
     LOG_RAW(
-        "\t\t spi-Flash : flash_tool -s 0x02 -f gowin-firmware.bin -p /dev/i2c-5");
-    LOG_RAW(
-        "\t\t spi-Flash Status Register: flash_tool -s 0x05 -p /dev/i2c-5");
+        "\t\t spi-Flash Status Register: flash_tool -s 0x05 -p %s", I2C_DEVICE);
     LOG_RAW(
         "\t\t spi-Flash commands can be in hex \"0x\". or decimal\".\" See SPI Flash data-sheet");
     LOG_RAW(
@@ -471,7 +569,8 @@ void _print_tools_help() {
     exit(0);
 }
 
-int main(int argc, char ** argv) {
+int main(int argc,
+         char ** argv) {
     int err = logger_init();
     int c;
     char driver[MAX_DRIVER_NAME + 1] = { 0 };
@@ -494,7 +593,7 @@ int main(int argc, char ** argv) {
     serial_comm.enabled = false;
     udp_comm.enabled = false;
 
-    while ((c = getopt(argc, argv, "s:c:d:p:f:r:b:z:h:tg:")) != -1) {
+    while ((c = getopt(argc, argv, "s:c:d:p:f:r:b:z:h:vtg:")) != -1) {
         switch (c) {
             case 'd':             // driver
                 strncpy(driver, optarg, MAX_DRIVER_NAME);
@@ -542,6 +641,10 @@ int main(int argc, char ** argv) {
             case 'g':
                 gowin_partition = atoi(optarg);
                 LOG_INFO("Gowin partition = %d", gowin_partition);
+                break;
+            case 'v':
+                LOG_RAW("%s", FLASH_TOOL_VERSION_GIT);
+                exit(0);
                 break;
             case 'h':
                 _print_tools_help();

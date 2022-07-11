@@ -149,14 +149,17 @@ void GOWIN_Protocol_dpcd_write(u8 index);
 
 void GOWIN_Edid_Initialize(u8 verify);
 
-unsigned int GOWIN_Compare_EdidDpcd(u8 * block1, u8 * block2, const char * logtxt);
+unsigned int GOWIN_Compare_EdidDpcd(u8 * block1,
+                                    u8 * block2,
+                                    const char * logtxt);
 void GOWIN_Print_edid_in_log(unsigned index);
 
 u8   GOWIN_QueueIndex_get();
 void GOWIN_Queue_Init();
 u8   GOWIN_Queue_size();
 void GOWIN_Queue_Tx_Msg(t_gowin_command cmd);
-void GOWIN_Queue_Tx_Msg_Index(t_gowin_command cmd, u8 storage_index);
+void GOWIN_Queue_Tx_Msg_Index(t_gowin_command cmd,
+                              u8 storage_index);
 void GOWIN_Process_Queue();
 
 #endif  // __GOWIN_PROTOCOL_H__

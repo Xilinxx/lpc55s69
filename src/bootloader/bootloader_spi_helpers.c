@@ -18,16 +18,22 @@
 #include "version.h"
 #include "memory_map.h"
 
-extern uint32_t crc32(uint32_t crc, const uint8_t * buf, size_t len);
+extern uint32_t crc32(uint32_t crc,
+                      const uint8_t * buf,
+                      size_t len);
 
-static int memvcmp(void * memory, unsigned char val, unsigned int size) {
+static int memvcmp(void * memory,
+                   unsigned char val,
+                   unsigned int size) {
     unsigned char * mm = (unsigned char *)memory;
 
     return (*mm == val) && memcmp(mm, mm + 1, size - 1) == 0;
 }
 
-int _bootloader_spi_verify_crc(struct spi_ctxt_t * bctxt, struct
-                               storage_driver_t * spidriver, bool silent) {
+int _bootloader_spi_verify_crc(struct spi_ctxt_t * bctxt,
+                               struct
+                               storage_driver_t * spidriver,
+                               bool silent) {
     uint32_t crc = storage_crc_storage(spidriver, bctxt->gowin[GOWIN_PARTITION_0].image_size);
 
     if (silent)
@@ -100,7 +106,8 @@ int _bootloader_spi_retrieve_ctxt(struct spi_ctxt_t * bctxt,
     return error;
 }
 
-bool _bootloader_spi_ctxt_equal(struct spi_ctxt_t * b1, struct spi_ctxt_t * b2) {
+bool _bootloader_spi_ctxt_equal(struct spi_ctxt_t * b1,
+                                struct spi_ctxt_t * b2) {
     // we only compare the partition data! , not the own crc and partition
     if (!memcmp(b1, b2, sizeof(spi_partition_ctxt_t) * BTLR_SPI_NR_BIN)) {
         return true;
@@ -196,7 +203,8 @@ int _bootloader_spi_store_ctxt(struct spi_ctxt_t * bctxt,
     return error;
 }
 
-void _bootloader_spi_initialize_ctxt(struct spi_ctxt_t * bctxt, gowin_partition_t partition) {
+void _bootloader_spi_initialize_ctxt(struct spi_ctxt_t * bctxt,
+                                     gowin_partition_t partition) {
     LOG_INFO("Creating new bootloader context for spi%d (%d bytes)", partition,
              sizeof(struct spi_ctxt_t));
 
@@ -226,7 +234,8 @@ void _bootloader_spi_initialize_ctxt(struct spi_ctxt_t * bctxt, gowin_partition_
     bctxt->part = GOWIN_PARTITION_NONE;
 }
 
-int _bootloader_spi_send_spiinfo(struct spi_ctxt_t * bctxt, struct comm_driver_t * cdriver) {
+int _bootloader_spi_send_spiinfo(struct spi_ctxt_t * bctxt,
+                                 struct comm_driver_t * cdriver) {
     uint8_t out_buffer[COMMP_CMD_PACKET_SIZE + sizeof(struct spi_ctxt_t)] = { 0 };
 
     memset(out_buffer, 0, sizeof(out_buffer));

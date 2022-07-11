@@ -18,7 +18,13 @@
 #define I2C_DEVICE_NAME_LENGTH   15
 #define I2C_ADDRESS              0x60 // the gpmcu-device command interface
 #define I2C_ADDRESS_BIS          0x61 // gpmcu-device - readback of spi flash pages
-#define I2C_FLASH_CMD_IDENTIFIER (0x50u)
+
+// 8Byte r/w register addresses accesible via i2c (instead of default uart)
+#define I2C_FLASH_CMD_BOOTPART   (0x09u) // Read 0 or 1
+#define I2C_FLASH_CMD_RESET      (0x31u) // Write 1 = gpmcu reset request
+#define I2C_FLASH_CMD_GOWIN      (0x40u) // followed by cmd for Gowin
+#define I2C_FLASH_CMD_IDENTIFIER (0x50u) // followed by cmd for SPI Rom
+
 #define I2C_DATA_LENGTH          (256) // MAX is 256
 
 static int fd;
@@ -163,13 +169,14 @@ int i2c_spi_flash_erase64k(const int eraseblocks) {
         uint8_t address_low_byte = (uint8_t)(erase_address & 0xff);
         uint8_t command[] = { (uint8_t)I2C_FLASH_CMD_IDENTIFIER,
                               (uint8_t)SPI_IS25_BER64,
-                              address_high_byte, address_low_byte };                                                                    // dummy byte
+                              address_high_byte, address_low_byte }; // dummy byte
         struct i2c_msg message = { I2C_ADDRESS, 0, sizeof(command), command };
         struct i2c_rdwr_ioctl_data ioctl_data = { &message, 1 };
         int result = ioctl(fd, I2C_RDWR, &ioctl_data);
-        LOG_DEBUG("Erasing 64K Block: %d , AdrHiByte[0x%X]\t result:%d", i, address_high_byte, result);
-        usleep(500 * 1e3);         // Erasing these blocks takes some time, full chip erase is over 30s.
-        erase_address += 0x100;         // next 64k
+        LOG_DEBUG("Erasing 64K Block: %d , AdrHiByte[0x%X]\t result:%d", i, address_high_byte,
+                  result);
+        usleep(500 * 1e3);                                           // Erasing these blocks takes some time, full chip erase is over 30s.
+        erase_address += 0x100;                                      // next 64k
     }
 
     close(fd);
@@ -222,13 +229,14 @@ int i2c_spi_flash_program(const char * filename) {
         uint8_t address_low_byte = (uint8_t)(erase_address & 0xff);
         uint8_t command[] = { (uint8_t)I2C_FLASH_CMD_IDENTIFIER,
                               (uint8_t)SPI_IS25_BER64,
-                              address_high_byte, address_low_byte };                                                                    // dummy byte
+                              address_high_byte, address_low_byte }; // dummy byte
         struct i2c_msg message = { I2C_ADDRESS, 0, sizeof(command), command };
         struct i2c_rdwr_ioctl_data ioctl_data = { &message, 1 };
         int result = ioctl(fd, I2C_RDWR, &ioctl_data);
-        LOG_DEBUG("Erasing 64K Block: %d , AdrHiByte[0x%X]\t result:%d", i, address_high_byte, result);
-        usleep(500 * 1e3);         // Erasing these blocks takes some time, full chip erase is over 30s.
-        erase_address += 0x100;         // next 64k
+        LOG_DEBUG("Erasing 64K Block: %d , AdrHiByte[0x%X]\t result:%d", i, address_high_byte,
+                  result);
+        usleep(500 * 1e3);                                           // Erasing these blocks takes some time, full chip erase is over 30s.
+        erase_address += 0x100;                                      // next 64k
     }
 
     // Step2: Program per page(256bytes)
@@ -258,7 +266,8 @@ int i2c_spi_flash_program(const char * filename) {
         ioctl_data.nmsgs = 1;
         int resultdata = ioctl(fd, I2C_RDWR, &ioctl_data);
         if ((resultdata == -1) || (result == -1)) {
-            LOG_DEBUG("Flashed Block: %d/%d \t i2c returned cmd[%d] datawrite[%d]", i, blocks, result, resultdata);
+            LOG_DEBUG("Flashed Block: %d/%d \t i2c returned cmd[%d] datawrite[%d]", i, blocks,
+                      result, resultdata);
             LOG_ERROR("i2c failure");
             close(fd);
             return -1;
@@ -282,7 +291,9 @@ int i2c_spi_flash_program(const char * filename) {
  * @param length - amount of bytes to check (only used for crc calculation)
  * @return a non-negative on success, or -1 on failure.
  */
-int i2c_spi_flash_readback_page(const uint16_t address, int * startCRC, const uint16_t length) {
+int i2c_spi_flash_readback_page(const uint16_t address,
+                                int * startCRC,
+                                const uint16_t length) {
     int ret = 0;
 
     fd = open(i2c_device_name, O_RDWR);

@@ -43,7 +43,9 @@ static uint8_t SpiFlash_Identification[5];
  * external code - crc.c
  ******************************************************************************/
 
-extern uint32_t crc32(uint32_t crc, const uint8_t * buf, size_t len);
+extern uint32_t crc32(uint32_t crc,
+                      const uint8_t * buf,
+                      size_t len);
 
 /*******************************************************************************
  * Code
@@ -114,7 +116,8 @@ static int _read_spi_flash_storage(struct storage_driver_t * sdriver,
 }
 
 static int _write_spi_flash_storage(struct storage_driver_t * sdriver,
-                                    uint8_t * buffer, size_t len) {
+                                    uint8_t * buffer,
+                                    size_t len) {
     struct spi_flash_area_t * farea = STORAGE_GETPRIV(sdriver);
 
     off_t startPage = (off_t)farea->start_addr / IS25_IS25XP_BYTES_PER_PAGE;
@@ -175,7 +178,8 @@ static int _erase_spi_flash_storage(struct storage_driver_t * sdriver) {
     return 0;
 }
 
-static uint32_t _crc_spi_flash_storage(struct storage_driver_t * sdriver, size_t len) {
+static uint32_t _crc_spi_flash_storage(struct storage_driver_t * sdriver,
+                                       size_t len) {
     struct spi_flash_area_t * farea = STORAGE_GETPRIV(sdriver);
 
     // the idea is to only check the supplied file length = len
@@ -232,7 +236,9 @@ struct storage_driver_t * storage_new_spi_flash_driver() {
     return &fdriver;
 }
 
-struct spi_flash_area_t storage_new_spi_flash_area(char * name, uint32_t addr, uint32_t size) {
+struct spi_flash_area_t storage_new_spi_flash_area(char * name,
+                                                   uint32_t addr,
+                                                   uint32_t size) {
     struct spi_flash_area_t area = {
         .start_addr = addr,
         .size       = size,

@@ -42,6 +42,8 @@ int i2c_spi_flash_cmd_set_page_access(bool PageAccessOn);
 int i2c_spi_flash_program(const char * filename);
 
 int i2c_isp_flash_calculate_crc(const char * filename);
-int i2c_spi_flash_readback_page(const uint16_t address, int * startCRC, const uint16_t length);
+int i2c_spi_flash_readback_page(const uint16_t address,
+                                int * startCRC,
+                                const uint16_t length);
 
 #endif // _TOOLS_COMM_I2C_GPMCU_H_

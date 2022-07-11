@@ -15,7 +15,9 @@ struct serial_comm_ctxt_t {
     char port_name[SERIAL_PORT_MAX_LEN + 1];
 };
 
-static int _set_interface_attribs(int fd, int speed, int parity) {
+static int _set_interface_attribs(int fd,
+                                  int speed,
+                                  int parity) {
     struct termios tty;
 
     if (tcgetattr(fd, &tty) != 0) {
@@ -85,7 +87,9 @@ static int _comm_serial_init(void * drv) {
     return 0;
 }
 
-static int _comm_serial_write(void * drv, uint8_t * buffer, size_t len) {
+static int _comm_serial_write(void * drv,
+                              uint8_t * buffer,
+                              size_t len) {
     struct comm_driver_t * driver = (struct comm_driver_t *)drv;
 
     if (!driver) {
@@ -110,7 +114,9 @@ static int _comm_serial_write(void * drv, uint8_t * buffer, size_t len) {
     return written;
 }
 
-static int _comm_serial_read(void * drv, uint8_t * buffer, size_t * len) {
+static int _comm_serial_read(void * drv,
+                             uint8_t * buffer,
+                             size_t * len) {
     struct comm_driver_t * driver = (struct comm_driver_t *)drv;
 
     if (!driver) {

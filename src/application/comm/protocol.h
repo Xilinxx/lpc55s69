@@ -134,7 +134,9 @@ extern t_comm_data COMM_DATA[NUMBER_OF_PROTOCOL_UARTS];
 t_comm_protocol_return_value COMM_Protocol(t_uart_channel uart_channel);
 
 
-void PROTO_TX_SendMsg(t_uart_channel uart_channel, u8 * data, u16 length);
+void PROTO_TX_SendMsg(t_uart_channel uart_channel,
+                      u8 * data,
+                      u16 length);
 
 #ifdef UNIT_TEST
 EXTERN u8 unitTest_SendBuf[MCU_RXBUF_SIZE];

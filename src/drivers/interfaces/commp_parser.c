@@ -14,9 +14,13 @@
 #define static
 #endif
 
-typedef int (* packet_handler_t)(void * priv, uint8_t * data, size_t size);
+typedef int (* packet_handler_t)(void * priv,
+                                 uint8_t * data,
+                                 size_t size);
 
-static int _default_phandler(void * priv, uint8_t * data, size_t size) {
+static int _default_phandler(void * priv,
+                             uint8_t * data,
+                             size_t size) {
     (void)priv;
     (void)data;
     (void)size;
@@ -28,7 +32,9 @@ static int _default_phandler(void * priv, uint8_t * data, size_t size) {
     return -1;
 }
 
-static int _rrq_phandler(void * priv, uint8_t * data, size_t size) {
+static int _rrq_phandler(void * priv,
+                         uint8_t * data,
+                         size_t size) {
     struct comm_ctxt_t * ctxt = (struct comm_ctxt_t *)priv;
 
     if (!ctxt) {
@@ -54,7 +60,7 @@ static int _rrq_phandler(void * priv, uint8_t * data, size_t size) {
     struct comm_proto_rrq_wrq_t rrq = {
         .opcode      = data[COMMP_OPCODE_BYTE],
         .length      = (uint32_t)(data[COMMP_RRQ_LENGTH_OFFSET] << 24
-                             | data[COMMP_RRQ_LENGTH_OFFSET + 1]) << 16
+                                  | data[COMMP_RRQ_LENGTH_OFFSET + 1]) << 16
             | (uint16_t)(data[COMMP_RRQ_LENGTH_OFFSET + 2] << 8
                          | data[COMMP_RRQ_LENGTH_OFFSET + 3]),
             .romname = &data[COMMP_RRQ_ROMNAME_OFFSET],
@@ -85,7 +91,9 @@ static int _rrq_phandler(void * priv, uint8_t * data, size_t size) {
     return 0;
 }
 
-static int _wrq_phandler(void * priv, uint8_t * data, size_t size) {
+static int _wrq_phandler(void * priv,
+                         uint8_t * data,
+                         size_t size) {
     struct comm_ctxt_t * ctxt = (struct comm_ctxt_t *)priv;
 
     if (!ctxt) {
@@ -145,7 +153,9 @@ static int _wrq_phandler(void * priv, uint8_t * data, size_t size) {
     return 0;
 }
 
-static int _data_phandler(void * priv, uint8_t * data, size_t size) {
+static int _data_phandler(void * priv,
+                          uint8_t * data,
+                          size_t size) {
     struct comm_ctxt_t * ctxt = (struct comm_ctxt_t *)priv;
 
     /* Use asserts instead... */
@@ -171,7 +181,7 @@ static int _data_phandler(void * priv, uint8_t * data, size_t size) {
     struct comm_proto_data_t datap = {
         .opcode  = data[COMMP_OPCODE_BYTE],
         .blocknr = (uint16_t)(data[COMMP_DATA_PNUMBER_MSB] << 8
-                                     | data[COMMP_DATA_PNUMBER_LSB]),
+                              | data[COMMP_DATA_PNUMBER_LSB]),
         .dataptr = &data[COMMP_DATA_OFFSET],
     };
     LOG_DEBUG("Data len: %d", size);
@@ -198,7 +208,9 @@ static int _data_phandler(void * priv, uint8_t * data, size_t size) {
     return 0;
 }
 
-static int _ack_phandler(void * priv, uint8_t * data, size_t size) {
+static int _ack_phandler(void * priv,
+                         uint8_t * data,
+                         size_t size) {
     struct comm_ctxt_t * ctxt = (struct comm_ctxt_t *)priv;
 
     if (!ctxt) {
@@ -238,7 +250,9 @@ static int _ack_phandler(void * priv, uint8_t * data, size_t size) {
     return 0;
 }
 
-static int _err_phandler(void * priv, uint8_t * data, size_t size) {
+static int _err_phandler(void * priv,
+                         uint8_t * data,
+                         size_t size) {
     (void)priv;
 
     if (!data) {
@@ -253,7 +267,7 @@ static int _err_phandler(void * priv, uint8_t * data, size_t size) {
     struct comm_proto_err_t err = {
         .opcode  = data[COMMP_OPCODE_BYTE],
         .errcode = (uint16_t)(data[COMMP_ERROR_ERRCODE_MSB] << 8
-                                     | data[COMMP_ERROR_ERRCODE_LSB]),
+                              | data[COMMP_ERROR_ERRCODE_LSB]),
         .errstr  = &data[COMMP_ERROR_ERRSTR_OFFSET],
     };
 
@@ -280,7 +294,9 @@ static int _err_phandler(void * priv, uint8_t * data, size_t size) {
     return -1;     // !< TODO: Fix this later. Returns -1 for unit tests for now
 }
 
-static int _cmd_phandler(void * priv, uint8_t * data, size_t size) {
+static int _cmd_phandler(void * priv,
+                         uint8_t * data,
+                         size_t size) {
     (void)priv;
 
     if (!data) {
@@ -298,7 +314,7 @@ static int _cmd_phandler(void * priv, uint8_t * data, size_t size) {
     struct comm_proto_cmd_t cmd = {
         .opcode  = data[COMMP_OPCODE_BYTE],
         .cmdcode = (uint16_t)(data[COMMP_CMD_CMDCODE_MSB] << 8
-                                     | data[COMMP_CMD_CMDCODE_LSB]),
+                              | data[COMMP_CMD_CMDCODE_LSB]),
         .data    = &data[COMMP_CMD_DATA_OFFSET],
     };
 
@@ -342,7 +358,8 @@ void comm_protocol_create_ack(struct comm_ctxt_t * transfer_ctxt,
     return;
 }
 
-void comm_protocol_create_error(uint16_t errorcode, char * errstr,
+void comm_protocol_create_error(uint16_t errorcode,
+                                char * errstr,
                                 uint8_t * buffer) {
     buffer[COMMP_OPCODE_ZERO_BYTE] = 0x00;
     buffer[COMMP_OPCODE_BYTE] = COMMP_ERR;
@@ -362,6 +379,8 @@ const char * comm_protocol_cmd_to_string(comm_proto_cmd_t cmd) {
         case COMMP_CMD_CRC: strcpy(str, "CMD_CRC");
             break;
         case COMMP_CMD_SWAP: strcpy(str, "CMD_SWAP");
+            break;
+        case COMMP_CMD_VERINFO: strcpy(str, "CMD_VERINFO");
             break;
         case COMMP_CMD_BOOTINFO: strcpy(str, "CMD_INFO");
             break;
@@ -395,6 +414,8 @@ const char * comm_protocol_cmd_to_string(comm_proto_cmd_t cmd) {
             break;
         case COMMP_CMD_SET_ROM1: strcpy(str, "CMD_SET_ROM1");
             break;
+        case COMMP_CMD_INFO_APP: strcpy(str, "CMD_INFO_APP");
+            break;
         default:
             break;
     }
@@ -414,7 +435,8 @@ const packet_handler_t _phandlers[] = {
 };
 
 int comm_protocol_parse_packet(struct comm_ctxt_t * transfer_ctxt,
-                               uint8_t * buffer, size_t len) {
+                               uint8_t * buffer,
+                               size_t len) {
     if (!buffer) {
         LOG_ERROR("Invalid buffer pointer");
         return -1;

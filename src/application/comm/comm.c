@@ -51,7 +51,9 @@ void reply_invalid(const u8 nack_type) { // NACK
 // the LOG gets read in chunks of 256byte.
 // resulting in 32offset 0..31, so offset is multiplied by 256=0x100
 // ------------------------------------------------------------------------------
-void sharedram_log_read(u8 * RxBuf, u8 Offset, u8 NrOfBytes) {
+void sharedram_log_read(u8 * RxBuf,
+                        u8 Offset,
+                        u8 NrOfBytes) {
 #ifndef UNIT_TEST // gets mocked for UNIT_TESTS
     LOG_DEBUG("sharedram_log_read Offset(%d) NrOfBytes(%d)", Offset, NrOfBytes);
 
@@ -162,8 +164,10 @@ void comm_handler(void) {
                     switch (Identifier) {
                         case CMD_ID_BOOTLOG:
                             sharedram_log_read(COMM_DATA[UART1].MsgBuf,
-                                               (*(COMM_DATA[UART1].MsgBuf + PROTOCOL_RX_OFFSET_OFFSET)),
-                                               (*(COMM_DATA[UART1].MsgBuf + PROTOCOL_RX_OFFSET_LENGTH))
+                                               (*(COMM_DATA[UART1].MsgBuf +
+                                                  PROTOCOL_RX_OFFSET_OFFSET)),
+                                               (*(COMM_DATA[UART1].MsgBuf +
+                                                  PROTOCOL_RX_OFFSET_LENGTH))
                                                );
                             break;
 

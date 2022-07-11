@@ -43,7 +43,8 @@ static struct mem_ctxt_t _default_ctxt = {
  * @param start Start of the configuration region
  * @param end End of the configuration region
  */
-static void _wipe_config_region(uint32_t * start, uint32_t * end) {
+static void _wipe_config_region(uint32_t * start,
+                                uint32_t * end) {
     uint32_t * curr = start;
 
     while (curr != end)
@@ -56,7 +57,8 @@ static void _wipe_config_region(uint32_t * start, uint32_t * end) {
  * @param start Start of the logging region
  * @param end End of the logging region
  */
-static void _wipe_old_logging(uint32_t * start, uint32_t * end) {
+static void _wipe_old_logging(uint32_t * start,
+                              uint32_t * end) {
     uint32_t * curr = start;
 
     while (curr != end)
@@ -123,7 +125,9 @@ static int _init_application_mem(void * drv) {
  *
  * @returns  -1 if failed otherwise 0
  */
-static int _write_mem(void * drv, struct line_info_t * linfo, char * fmt,
+static int _write_mem(void * drv,
+                      struct line_info_t * linfo,
+                      char * fmt,
                       va_list * v) {
     (void)linfo;
 
